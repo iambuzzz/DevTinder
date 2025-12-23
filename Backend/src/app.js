@@ -21,7 +21,7 @@ app.use(express.json()); //whatever request comes, if it is coming in json forma
 //Express does NOT parse JSON by default
 // express.json() converts raw JSON → JS object
 
-//post api to add documents in db
+//post api to add documents in db -> inserting documents
 app.post("/signup", async (req, res) => {
   // 1) creating new instance of User model (manual testing)
   //   const user = new User({ // js-object
@@ -67,8 +67,83 @@ app.post("/signup", async (req, res) => {
     res.status(400).send("Some error Occurred...\n" + err.message);
   }
 });
+// api to insert documents in db
+app.post("/insertUsers", async (req, res) => {
+  // insertOne() ❌ (LOW LEVEL – AVOID)
+  // Code:
+  // await User.collection.insertOne({
+  //   firstName: "Ambuj",
+  //   emailId: "ambuj@gmail.com"
+  // });
+  // What happens :❌ NO validation❌ NO middleware❌ NO defaults
+  // Use when: ✔ Bulk imports , ✔ Seed scripts
+  // 🚫 Never use for user signup
+  //insertMany()->(BULK INSERT)
+  try {
+    const result = await User.insertMany([
+      {
+        firstName: "Riya",
+        lastName: "Sharma",
+        emailId: "riya.sharma@gmail.com",
+        password: "riya123",
+        age: 22,
+        gender: "female",
+        mobileNo: "9000000001",
+      },
+      {
+        firstName: "Aman",
+        lastName: "Verma",
+        emailId: "aman.verma@gmail.com",
+        password: "aman123",
+        age: 24,
+        gender: "male",
+        mobileNo: "9000000002",
+      },
+      {
+        firstName: "Sneha",
+        lastName: "Gupta",
+        emailId: "sneha.gupta@gmail.com",
+        password: "sneha123",
+        age: 21,
+        gender: "female",
+        mobileNo: "9000000003",
+      },
+      {
+        firstName: "Rahul",
+        lastName: "Singh",
+        emailId: "rahul.singh@gmail.com",
+        password: "rahul123",
+        age: 26,
+        gender: "male",
+        mobileNo: "9000000004",
+      },
+      {
+        firstName: "Pooja",
+        lastName: "Mehta",
+        emailId: "pooja.mehta@gmail.com",
+        password: "pooja123",
+        age: 23,
+        gender: "female",
+        mobileNo: "9000000005",
+      },
+    ]);
+    console.log("Users inserted successfully:", result.length, "\n", result);
 
-// requesting data from db
+    res.status(201).json({
+      message: "Users inserted successfully",
+      insertedCount: result.length,
+    });
+  } catch (err) {
+    console.error("InsertMany error:", err.message);
+
+    res.status(400).json({
+      message: "Failed to insert users",
+      error: err.message,
+    });
+  }
+});
+
+// get api to get documents -> requesting data from db
 app.get("/users", async (req, res) => {
   const users = await User.find(); //it will give all the data of that collection, returns array of documents if any, else return empty array [].
   // res.send(users);
@@ -133,4 +208,123 @@ app.get("/users", async (req, res) => {
   //lean() — RETURN PLAIN JS OBJECT (IMPORTANT) -> returns Plain JS Object, Faster because it has No methods, without lean() it returns mongoose document which is heavy as it has methods. Use when ✔ Read-only data ✔ Performance critical APIs
   const plainUser = await User.find().lean().limit(1);
   console.log(plainUser);
+
+  // QUERY EXECUTION (IMPORTANT CONCEPT)
+  // const query = User.find({ age: { $gt: 18 } }); Only This does NOT hit DB yet.
+  //DB call happens when: -> await query; OR -> query.exec();
+
+  //insertOne() and insertMany()
+});
+
+// patch api to update existing documents
+app.patch("/updateUsers", async (req, res) => {
+  // // save() FOR UPDATE (BEST PRACTICE)
+  // const user = await User.findById(id);
+  // user.age = 25;
+  // await user.save();
+
+  const { id, ...data } = req.body;
+  try {
+    const user = await User.findByIdAndUpdate(id, data, {
+      new: true,
+      runValidators: true,
+    }); //this will return new updated document, by default if u dont pass new:true, it is false which return old document(before updation) and enforce schema validation, as by default it is false.
+    console.log(user);
+    res.send("user updated successfully\n" + user);
+  } catch (err) {
+    console.log(err);
+    res.status(404).send("some error occured\n" + err.message);
+  }
+});
+// patch api to update document using updateOne() -> (NO DOCUMENT RETURN)
+app.patch("/updateOneUser", async (req, res) => {
+  console.log(req.body);
+  const { emailId, mobileNo, ...data } = req.body;
+  try {
+    const user = await User.updateOne({ emailId, mobileNo }, { $set: data });
+    if (user.matchedCount === 0) {
+      console.log("Failed:Not matched!❌");
+      return res.status(401).send("filters does not match");
+    } else {
+      res.send("updated successfully");
+      console.log("done!!");
+    }
+  } catch (err) {
+    console.log("some error occured\n" + err.message);
+    res.status(404).send("some error occured\n" + err.message);
+  }
+});
+// updateMany() (BULK UPDATE)
+app.patch("/updateManyUsers", async (req, res) => {
+  const list = await User.updateMany(
+    { gender: "female" },
+    { $set: { age: 21 } }
+  );
+  try {
+    if (list.matchedCount === 0) {
+      res.status(401).send("error occured : no match found");
+      console.log("no match found");
+    } else {
+      res.send("updated successfully : " + list.modifiedCount);
+      console.log("updated successfully : " + list.modifiedCount);
+    }
+  } catch (err) {
+    res.status(400).send("some error occured : " + err.message);
+    console.log("some error occured : " + err.message);
+  }
+});
+
+//delete api -> to delete documents
+app.delete("/deleteUser", async (req, res) => {
+  // 1) findByIdAndDelete()
+  try {
+    const user = await User.findByIdAndDelete(req.body.id); // returns deleted document or null if not found
+    if (user != null) {
+      res.send("deleted successfully : " + user);
+      console.log("deleted successfully : " + user);
+    } else {
+      res.send("no match found");
+      console.log("no match found");
+    }
+  } catch (err) {
+    res.status(400).send("something went wrong!! : " + err.message);
+    console.log("something went wrong!! : " + err.message);
+  }
+
+  // 2) const result = await User.deleteOne({ emailId: "radhika123@gmail.com" }); // returns : { deletedCount: 1 }
+  // try {
+  //   const result = await User.deleteOne({ emailId: "radhika123@gmail.com" }); // returns deleted document or null if not found
+  //   if (result != null) {
+  //     res.send("deleted successfully : " + result.deletedCount);
+  //     console.log("deleted successfully : " + result.deletedCount);
+  //   } else {
+  //     res.send("no match found");
+  //     console.log("no match found");
+  //   }
+  // } catch (err) {
+  //   res.status(400).send("something went wrong!! : " + err.message);
+  //   console.log("something went wrong!! : " + err.message);
+  // }
+  // 3) const result2 = await User.deleteMany({ gender: "female" });
+  // try {
+  //   const result = await User.deleteMany({ gender: "female" });
+  //   if (result != null) {
+  //     res.send("deleted successfully : " + result.deletedCount);
+  //     console.log("deleted successfully : " + result.deletedCount);
+  //   } else {
+  //     res.send("no match found");
+  //     console.log("no match found");
+  //   }
+  // } catch (err) {
+  //   res.status(400).send("something went wrong!! : " + err.message);
+  //   console.log("something went wrong!! : " + err.message);
+  // }
+
+  //   //🔴 SOFT DELETE (INTERVIEW FAVORITE)
+  // //Instead of deleting data:
+  // await User.findByIdAndUpdate(id, {
+  //   isDeleted: true
+  // });
+  // //Why? Data recovery, Audit logs, Legal compliance
+  // //🔥 Most companies prefer soft delete
 });
