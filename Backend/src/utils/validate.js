@@ -64,4 +64,16 @@ function validateLoginData(req) {
     throw new Error("Enter valid Password!");
   }
 }
-module.exports = { validateSignupData, validateLoginData };
+
+function validateEditProfileData(req) {
+  const allowedEdits = ["firstName", "lastName", "age", "mobileNo", "age"];
+  const isAllowed = Object.keys(req.body).every((field) =>
+    allowedEdits.includes(field)
+  );
+  return isAllowed;
+}
+module.exports = {
+  validateSignupData,
+  validateLoginData,
+  validateEditProfileData,
+};
