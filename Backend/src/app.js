@@ -2,7 +2,16 @@ const express = require("express");
 const dbConnect = require("./config/dbConnect");
 const User = require("./models/user");
 const app = express();
+const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
+const auth = require("./middlewares/auth.js");
+require("dotenv").config();
 
+const {
+  validateSignupData,
+  validateLoginData,
+} = require("./utils/validate.js");
 //connect to database/cluster and start the server after that.
 const start = async () => {
   try {
@@ -20,6 +29,7 @@ app.use(express.json()); //whatever request comes, if it is coming in json forma
 //just checking the collection(adding the document)
 //Express does NOT parse JSON by default
 // express.json() converts raw JSON → JS object
+app.use(cookieParser());
 
 //post api to add documents in db -> inserting documents
 app.post("/signup", async (req, res) => {
@@ -44,27 +54,61 @@ app.post("/signup", async (req, res) => {
   // Right now: new User(req.body);
   // Client can send:{"isAdmin": true}
   //✅ SAFER WAY -> WHITELIST FIELDS
-  const { firstName, lastName, emailId, password, age, gender, mobileNo } =
-    req.body;
-  const safeUser = {
-    firstName,
-    lastName,
-    emailId,
-    password,
-    age,
-    gender,
-    mobileNo,
-  };
-  const user = new User(safeUser);
+  // const { firstName, lastName, emailId, password, age, gender, mobileNo } =
+  //   req.body;
+  // const safeUser = {
+  //   firstName,
+  //   lastName,
+  //   emailId,
+  //   password,
+  //   age,
+  //   gender,
+  //   mobileNo,
+  // };
+  // const user = new User(safeUser);
 
-  //saving data to db
+  // //saving data to db
+  // try {
+  //   await user.save();
+  //   console.log(user);
+  //   res.send("User added Succesfully");
+  // } catch (err) {
+  //   console.log(err);
+  //   res.status(400).send("Some error Occurred...\n" + err.message);
+  // }
+
   try {
+    const { firstName, lastName, emailId, password, age, gender, mobileNo } =
+      req.body;
+    // Validate input (may throw)
+    validateSignupData(req);
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    // Create user
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: hashedPassword,
+      age,
+      gender,
+      mobileNo,
+    });
+    // 4️⃣ Save to DB
     await user.save();
-    console.log(user);
-    res.send("User added Succesfully");
+    console.log("User created:", user._id);
+    res.status(201).send("Signup successful");
   } catch (err) {
-    console.log(err);
-    res.status(400).send("Some error Occurred...\n" + err.message);
+    console.error("Signup error:", err.message);
+    // Duplicate email error
+    if (err.code === 11000) {
+      return res.status(409).send("Email already registered");
+    }
+    // Other validation / server errors
+    res.status(400).json({
+      message: "Signup failed",
+      error: err.message,
+    });
   }
 });
 // api to insert documents in db
@@ -216,6 +260,7 @@ app.get("/users", async (req, res) => {
   //insertOne() and insertMany()
 });
 
+// PUT replaces the entire resource, while PATCH partially updates the resource.
 // patch api to update existing documents
 app.patch("/updateUsers", async (req, res) => {
   // // save() FOR UPDATE (BEST PRACTICE)
@@ -327,4 +372,53 @@ app.delete("/deleteUser", async (req, res) => {
   // });
   // //Why? Data recovery, Audit logs, Legal compliance
   // //🔥 Most companies prefer soft delete
+});
+
+//login api
+app.post("/login", async (req, res) => {
+  const { emailId, password } = req.body;
+  try {
+    validateLoginData(req);
+    const user = await User.findOne({ emailId });
+    if (!user) {
+      console.log("email not found");
+      return res.status(401).send("Invalid credentials");
+    } else {
+      const isMatch = user.isPasswordCorrect(password);
+      if (!isMatch) {
+        console.log("wrong password!");
+        return res.status(401).send("Invalid credentials");
+      } else {
+        // Create JWT
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+          expiresIn: "7d",
+        });
+        console.log("Login successful");
+        // Send cookie
+        res.cookie("authToken", token, {
+          httpOnly: true, // ❗ JS can't access (protects from XSS)
+          secure: true, // ❗ Only HTTPS in production
+          sameSite: "strict", // ❗ Prevents CSRF
+          expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        });
+        return res.send("Login successful");
+      }
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(400).send(err.message);
+  }
+});
+
+//api to access his profile - allowed only when signed in
+app.get("/profile", auth, async (req, res) => {
+  const user = req.user;
+  try {
+    console.log("Profile accessed:", req.user.emailId);
+
+    res.status(200).send(user);
+  } catch (err) {
+    console.error("Profile error:", err.message);
+    res.status(500).send("Something went wrong");
+  }
 });
