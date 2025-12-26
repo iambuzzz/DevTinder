@@ -3,10 +3,12 @@ const connectionRequestSchema = new mongoose.Schema(
   {
     fromUserId: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
     toUserId: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
     status: {
@@ -61,11 +63,10 @@ const connectionRequestSchema = new mongoose.Schema(
 
 connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 }, { unique: true }); //Supports queries using firstName + lastName and uniqueness is on the combination together, not individually
 
-connectionRequestSchema.pre("save", function (next) {
+connectionRequestSchema.pre("save", function () {
   if (this.fromUserId.equals(this.toUserId)) {
     throw new Error("Invalid request! cannot send request to yourself!");
   }
-  next();
 });
 const ConnectionRequest = mongoose.model(
   "ConnectionRequests",

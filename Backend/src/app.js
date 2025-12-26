@@ -14,6 +14,7 @@ const {
 const authRouter = require("./routes/authRouter.js");
 const profileRouter = require("./routes/profileRouter.js");
 const requestRouter = require("./routes/requestRouter.js");
+const userRouter = require("./routes/userRouter.js");
 
 //connect to database/cluster and start the server after that.
 const start = async () => {
@@ -37,6 +38,7 @@ app.use(cookieParser());
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
+app.use("/", userRouter);
 
 //post api to add documents in db -> inserting documents
 // app.post("/signup", async (req, res) => {
@@ -132,12 +134,18 @@ app.post("/insertUsers", async (req, res) => {
   // 🚫 Never use for user signup
   //insertMany()->(BULK INSERT)
   try {
+    const pass1 = await bcrypt.hash("Riya@123", 10);
+    const pass2 = await bcrypt.hash("Aman@123", 10);
+    const pass3 = await bcrypt.hash("Sneha@123", 10);
+    const pass4 = await bcrypt.hash("Rahul@123", 10);
+    const pass5 = await bcrypt.hash("Puja@123", 10);
+
     const result = await User.insertMany([
       {
         firstName: "Riya",
-        lastName: "Sharma",
-        emailId: "riya.sharma@gmail.com",
-        password: "riya123",
+        lastName: "Maurya",
+        emailId: "riyamaurya@gmail.com",
+        password: pass1,
         age: 22,
         gender: "female",
         mobileNo: "9000000001",
@@ -145,8 +153,8 @@ app.post("/insertUsers", async (req, res) => {
       {
         firstName: "Aman",
         lastName: "Verma",
-        emailId: "aman.verma@gmail.com",
-        password: "aman123",
+        emailId: "amanverma@gmail.com",
+        password: pass2,
         age: 24,
         gender: "male",
         mobileNo: "9000000002",
@@ -155,7 +163,7 @@ app.post("/insertUsers", async (req, res) => {
         firstName: "Sneha",
         lastName: "Gupta",
         emailId: "sneha.gupta@gmail.com",
-        password: "sneha123",
+        password: pass3,
         age: 21,
         gender: "female",
         mobileNo: "9000000003",
@@ -163,8 +171,8 @@ app.post("/insertUsers", async (req, res) => {
       {
         firstName: "Rahul",
         lastName: "Singh",
-        emailId: "rahul.singh@gmail.com",
-        password: "rahul123",
+        emailId: "rahulsingh@gmail.com",
+        password: pass4,
         age: 26,
         gender: "male",
         mobileNo: "9000000004",
@@ -172,8 +180,8 @@ app.post("/insertUsers", async (req, res) => {
       {
         firstName: "Pooja",
         lastName: "Mehta",
-        emailId: "pooja.mehta@gmail.com",
-        password: "pooja123",
+        emailId: "poojamehta@gmail.com",
+        password: pass5,
         age: 23,
         gender: "female",
         mobileNo: "9000000005",
