@@ -3,19 +3,26 @@ const userRouter = express.Router();
 const auth = require("../middlewares/auth");
 const User = require("../models/user");
 const ConnectionRequest = require("../models/connectionRequest");
+
 userRouter.get("/user/requests", auth, async (req, res) => {
   try {
-    const request = await ConnectionRequest.find({
+    const requests = await ConnectionRequest.find({
       toUserId: req.user._id,
       status: "interested",
     }).populate("fromUserId", ["firstName", "lastName"]);
-    if (request.length === 0) {
-      return res.send("No Pending requests!");
+
+    if (requests.length === 0) {
+      return res.json({ message: "No Pending requests!", data: requests });
     }
-    console.log(request);
-    res.send("Found " + request.length + " requests!");
+    return res.status(200).json({
+      message: "Found " + requests.length + " requests!",
+      data: requests,
+    });
   } catch (err) {
-    res.status(400).send("Something went wrong : " + err.message);
+    res.status(400).json({
+      message: "Finding connection requests failed",
+      error: err.message,
+    });
   }
 });
 
@@ -31,7 +38,9 @@ userRouter.get("/user/connections", auth, async (req, res) => {
       .populate("toUserId", "firstName lastName");
 
     if (!requests.length) {
-      return res.status(404).send("No connections found");
+      return res
+        .status(404)
+        .json({ message: "No connections found", data: requests });
     }
 
     const loggedInUserId = req.user._id.toString();
@@ -50,9 +59,13 @@ userRouter.get("/user/connections", auth, async (req, res) => {
       };
     });
 
-    res.json(result);
-  } catch (error) {
-    res.status(400).send("Something went wrong: " + error.message);
+    res
+      .status(200)
+      .json({ message: `${result.length} connections found`, data: result });
+  } catch (err) {
+    res
+      .status(400)
+      .json({ message: "Finding users connection failed", error: err.message });
   }
 });
 
@@ -79,13 +92,17 @@ userRouter.get("/feed", auth, async (req, res) => {
     const users = await User.find({
       _id: { $nin: Array.from(hideUsersFromFeed) },
     })
-      .select("_id firstName lastName age gender")
+      .select("_id firstName lastName age gender photoURL")
       .skip(skip)
       .limit(limit);
 
-    res.send(users);
+    return res
+      .status(200)
+      .json({ message: "Feed updated successfully", data: users });
   } catch (err) {
-    res.status(400).send("Something went wrong : " + err.message);
+    return res
+      .status(400)
+      .json({ message: "Feed updation failed", error: err.message });
   }
 });
 

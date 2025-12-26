@@ -7,16 +7,17 @@ const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const auth = require("./middlewares/auth.js");
 require("dotenv").config();
+
 const {
   validateSignupData,
   validateLoginData,
 } = require("./utils/validate.js");
+
 const authRouter = require("./routes/authRouter.js");
 const profileRouter = require("./routes/profileRouter.js");
 const requestRouter = require("./routes/requestRouter.js");
 const userRouter = require("./routes/userRouter.js");
 
-//connect to database/cluster and start the server after that.
 const start = async () => {
   try {
     await dbConnect();
@@ -29,16 +30,20 @@ const start = async () => {
 };
 start();
 
-app.use(express.json()); //whatever request comes, if it is coming in json format, express converts it to js-object
-//just checking the collection(adding the document)
-//Express does NOT parse JSON by default
-// express.json() converts raw JSON → JS object
+app.use(express.json());
 app.use(cookieParser());
 
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
+
+//------------------------------------------------------------------------
+
+// express.json() converts raw JSON → JS object
+//whatever request comes, if it is coming in json format, express converts it to js-object
+//just checking the collection(adding the document)
+//Express does NOT parse JSON by default
 
 //post api to add documents in db -> inserting documents
 // app.post("/signup", async (req, res) => {
@@ -122,273 +127,410 @@ app.use("/", userRouter);
 // });
 
 // api to insert documents in db
-app.post("/insertUsers", async (req, res) => {
-  // insertOne() ❌ (LOW LEVEL – AVOID)
-  // Code:
-  // await User.collection.insertOne({
-  //   firstName: "Ambuj",
-  //   emailId: "ambuj@gmail.com"
-  // });
-  // What happens :❌ NO validation❌ NO middleware❌ NO defaults
-  // Use when: ✔ Bulk imports , ✔ Seed scripts
-  // 🚫 Never use for user signup
-  //insertMany()->(BULK INSERT)
-  try {
-    const pass1 = await bcrypt.hash("Riya@123", 10);
-    const pass2 = await bcrypt.hash("Aman@123", 10);
-    const pass3 = await bcrypt.hash("Sneha@123", 10);
-    const pass4 = await bcrypt.hash("Rahul@123", 10);
-    const pass5 = await bcrypt.hash("Puja@123", 10);
+// app.post("/insertUsers", async (req, res) => {
+//   // insertOne() ❌ (LOW LEVEL – AVOID)
+//   // Code:
+//   // await User.collection.insertOne({
+//   //   firstName: "Ambuj",
+//   //   emailId: "ambuj@gmail.com"
+//   // });
+//   // What happens :❌ NO validation❌ NO middleware❌ NO defaults
+//   // Use when: ✔ Bulk imports , ✔ Seed scripts
+//   // 🚫 Never use for user signup
+//   //insertMany()->(BULK INSERT)
+//   try {
+//     const pass1 = await bcrypt.hash("Riya@123", 10);
+//     const pass2 = await bcrypt.hash("Ambuj@123", 10);
+//     const pass3 = await bcrypt.hash("Bhavya@123", 10);
+//     const pass4 = await bcrypt.hash("Radhika@123", 10);
+//     const pass5 = await bcrypt.hash("Bhavna@123", 10);
+//     const pass6 = await bcrypt.hash("Kavita@123", 10);
+//     const pass7 = await bcrypt.hash("Isha@123", 10);
+//     const pass8 = await bcrypt.hash("Yashasvi@123", 10);
+//     const pass9 = await bcrypt.hash("Renu@123", 10);
+//     const pass10 = await bcrypt.hash("Vinita@123", 10);
+//     const result = await User.insertMany([
+//       {
+//         firstName: "Riya",
+//         lastName: "Maurya",
+//         emailId: "riyamaurya@gmail.com",
+//         password: pass1,
+//         age: 22,
+//         gender: "female",
+//         mobileNo: "9000000001",
+//         skillsOrInterests: [
+//           "upsc",
+//           "si",
+//           "socialmedia",
+//           "beautiful",
+//           "fashion",
+//           "hindi",
+//         ],
+//       },
+//       {
+//         firstName: "Ambuj",
+//         lastName: "Jaiswal",
+//         emailId: "ambujjaiswal@gmail.com",
+//         password: pass2,
+//         age: 23,
+//         gender: "male",
+//         mobileNo: "9000000002",
+//         skillsOrInterests: [
+//           "webdevlopment",
+//           "commpetitiveprogramming",
+//           "dsa",
+//           "problemsolving",
+//           "java",
+//           "javascript",
+//           "cricket",
+//           "sports",
+//           "singing",
+//           "beautiful",
+//         ],
+//       },
+//       {
+//         firstName: "Bhavya",
+//         lastName: "Jain",
+//         emailId: "bhavyajain@gmail.com",
+//         password: pass3,
+//         age: 21,
+//         gender: "female",
+//         mobileNo: "9000000003",
+//         skillsOrInterests: [
+//           "buisness",
+//           "socialmedia",
+//           "art",
+//           "decoration",
+//           "fashion",
+//           "beautiful",
+//         ],
+//       },
+//       {
+//         firstName: "Radhika",
+//         lastName: "Sharma",
+//         emailId: "radhikasharma@gmail.com",
+//         password: pass4,
+//         age: 29,
+//         gender: "female",
+//         mobileNo: "9000000004",
+//         skillsOrInterests: [
+//           "literature",
+//           "english",
+//           "buisness",
+//           "speaking",
+//           "teacher",
+//           "beautiful",
+//         ],
+//       },
+//       {
+//         firstName: "Bhavna",
+//         lastName: "Meemroth",
+//         emailId: "bhavnameemroth@gmail.com",
+//         password: pass5,
+//         age: 21,
+//         gender: "female",
+//         mobileNo: "9000000005",
+//         skillsOrInterests: [
+//           "webdevlopment",
+//           "cpp",
+//           "dsa",
+//           "beautiful",
+//           "mern",
+//           "javascript",
+//           "badminton",
+//           "sports",
+//         ],
+//       },
+//       {
+//         firstName: "Kavita",
+//         lastName: "Singh",
+//         emailId: "kavita@gmail.com",
+//         password: pass6,
+//         age: 23,
+//         gender: "female",
+//         mobileNo: "9000000006",
+//         skillsOrInterests: [
+//           "english",
+//           "speaking",
+//           "beautiful",
+//           "cute",
+//           "hot",
+//           "sexy",
+//           "dancing",
+//           "singing",
+//         ],
+//       },
+//       {
+//         firstName: "Isha",
+//         lastName: "Tripathi",
+//         emailId: "ishatripathi@gmail.com",
+//         password: pass7,
+//         age: 32,
+//         gender: "female",
+//         mobileNo: "9000000007",
+//         skillsOrInterests: [
+//           "management",
+//           "leadership",
+//           "reading",
+//           "yoga",
+//           "traveling",
+//           "cooking",
+//         ],
+//       },
+//       {
+//         firstName: "Yashasvi",
+//         lastName: "Yadav",
+//         emailId: "yashasviyadav@gmail.com",
+//         password: pass8,
+//         age: 21,
+//         gender: "female",
+//         mobileNo: "9000000008",
+//         skillsOrInterests: [
+//           "python",
+//           "datascience",
+//           "machinelearning",
+//           "swimming",
+//           "music",
+//           "coding",
+//         ],
+//       },
+//       {
+//         firstName: "Renu",
+//         lastName: "Rawal",
+//         emailId: "renurawal@gmail.com",
+//         password: pass9,
+//         age: 20,
+//         gender: "female",
+//         mobileNo: "9000000009",
+//         skillsOrInterests: [
+//           "graphicdesign",
+//           "sketching",
+//           "photography",
+//           "creative",
+//           "editing",
+//           "movies",
+//         ],
+//       },
+//       {
+//         firstName: "Vinita",
+//         lastName: "Jangra",
+//         emailId: "vinitajangra@gmail.com",
+//         password: pass10,
+//         age: 19,
+//         gender: "female",
+//         mobileNo: "9000000010",
+//         skillsOrInterests: [
+//           "marketing",
+//           "contentwriting",
+//           "blogging",
+//           "socialmedia",
+//           "fitness",
+//           "dance",
+//         ],
+//       },
+//     ]);
+//     console.log("Users inserted successfully:", result.length, "\n", result);
 
-    const result = await User.insertMany([
-      {
-        firstName: "Riya",
-        lastName: "Maurya",
-        emailId: "riyamaurya@gmail.com",
-        password: pass1,
-        age: 22,
-        gender: "female",
-        mobileNo: "9000000001",
-      },
-      {
-        firstName: "Aman",
-        lastName: "Verma",
-        emailId: "amanverma@gmail.com",
-        password: pass2,
-        age: 24,
-        gender: "male",
-        mobileNo: "9000000002",
-      },
-      {
-        firstName: "Sneha",
-        lastName: "Gupta",
-        emailId: "sneha.gupta@gmail.com",
-        password: pass3,
-        age: 21,
-        gender: "female",
-        mobileNo: "9000000003",
-      },
-      {
-        firstName: "Rahul",
-        lastName: "Singh",
-        emailId: "rahulsingh@gmail.com",
-        password: pass4,
-        age: 26,
-        gender: "male",
-        mobileNo: "9000000004",
-      },
-      {
-        firstName: "Pooja",
-        lastName: "Mehta",
-        emailId: "poojamehta@gmail.com",
-        password: pass5,
-        age: 23,
-        gender: "female",
-        mobileNo: "9000000005",
-      },
-    ]);
-    console.log("Users inserted successfully:", result.length, "\n", result);
+//     res.status(201).json({
+//       message: "Users inserted successfully",
+//       insertedCount: result.length,
+//     });
+//   } catch (err) {
+//     console.error("InsertMany error:", err.message);
 
-    res.status(201).json({
-      message: "Users inserted successfully",
-      insertedCount: result.length,
-    });
-  } catch (err) {
-    console.error("InsertMany error:", err.message);
-
-    res.status(400).json({
-      message: "Failed to insert users",
-      error: err.message,
-    });
-  }
-});
+//     res.status(400).json({
+//       message: "Failed to insert users",
+//       error: err.message,
+//     });
+//   }
+// });
 
 // get api to get documents -> requesting data from db
-app.get("/users", async (req, res) => {
-  const users = await User.find(); //it will give all the data of that collection, returns array of documents if any, else return empty array [].
-  // res.send(users);
+// app.get("/users", async (req, res) => {
+//   const users = await User.find(); //it will give all the data of that collection, returns array of documents if any, else return empty array [].
+//   // res.send(users);
 
-  const maleUsers = await User.find({ gender: "male", firstName: "Ambuj" }); //expect more than one documents that are matching.
-  // if we get empty data then there is a way to handle it.
-  // we can not do -> if(!users){ ... } // because users is there [] empty.
-  //corect way is :
-  //   if (maleUsers.length === 0) {
-  //     console.log("no match found...");
-  //     res.send(users);
-  //   } else {
-  //     console.log(maleUsers);
-  //     res.send(maleUsers);
-  //   }
+//   const maleUsers = await User.find({ gender: "male", firstName: "Ambuj" }); //expect more than one documents that are matching.
+//   // if we get empty data then there is a way to handle it.
+//   // we can not do -> if(!users){ ... } // because users is there [] empty.
+//   //corect way is :
+//   //   if (maleUsers.length === 0) {
+//   //     console.log("no match found...");
+//   //     res.send(users);
+//   //   } else {
+//   //     console.log(maleUsers);
+//   //     res.send(maleUsers);
+//   //   }
 
-  // findOne() — FETCH SINGLE DOCUMENT -> returns single object if present OR null -> use when You expect at most one document
-  //   const user = await User.findOne({ emailId: "riya123@gmail.com" });
-  //   if (!user) {
-  //     console.log("Not found");
-  //     res.send("Not found");
-  //   } else {
-  //     console.log(user);
-  //     res.send(user);
-  //   }
+//   // findOne() — FETCH SINGLE DOCUMENT -> returns single object if present OR null -> use when You expect at most one document
+//   //   const user = await User.findOne({ emailId: "riya123@gmail.com" });
+//   //   if (!user) {
+//   //     console.log("Not found");
+//   //     res.send("Not found");
+//   //   } else {
+//   //     console.log(user);
+//   //     res.send(user);
+//   //   }
 
-  // findById() — FETCH BY _id -> returns a object or null
-  //   const user1 = await User.findById(req.body.id);
-  //   if (!user1) {
-  //     console.log("Not found");
-  //     res.send("Not found");
-  //   } else {
-  //     console.log(user1);
-  //     res.send(user1);
-  //   }
+//   // findById() — FETCH BY _id -> returns a object or null
+//   //   const user1 = await User.findById(req.body.id);
+//   //   if (!user1) {
+//   //     console.log("Not found");
+//   //     res.send("Not found");
+//   //   } else {
+//   //     console.log(user1);
+//   //     res.send(user1);
+//   //   }
 
-  //select() — FETCH SPECIFIC FIELDS
-  //   const selectData = await User.find().select("firstName emailId");
-  //   console.log(selectData);
-  //   res.send(selectData);
-  //   // exclude password
-  //   const selectData2 = await User.find().select("-password");
-  //   console.log(selectData2);
+//   //select() — FETCH SPECIFIC FIELDS
+//   //   const selectData = await User.find().select("firstName emailId");
+//   //   console.log(selectData);
+//   //   res.send(selectData);
+//   //   // exclude password
+//   //   const selectData2 = await User.find().select("-password");
+//   //   console.log(selectData2);
 
-  // limit() & skip() — PAGINATION -> limit number of results and skip is no. of documents skiped from top
-  //   const newUsers = await User.find().skip(2).limit(2);
-  //   res.send(newUsers);
-  //   console.log(newUsers);
+//   // limit() & skip() — PAGINATION -> limit number of results and skip is no. of documents skiped from top
+//   //   const newUsers = await User.find().skip(2).limit(2);
+//   //   res.send(newUsers);
+//   //   console.log(newUsers);
 
-  // sort() — ORDER RESULTS -1=descending, 1=ascending
-  const sortedUsers = await User.find().sort({ firstName: -1 });
-  res.send(sortedUsers);
+//   // sort() — ORDER RESULTS -1=descending, 1=ascending
+//   const sortedUsers = await User.find().sort({ firstName: -1 });
+//   res.send(sortedUsers);
 
-  // countDocuments() — COUNT RESULTS -> return number
-  const count = await User.countDocuments({ gender: "male" });
-  console.log("Number of males : " + count);
+//   // countDocuments() — COUNT RESULTS -> return number
+//   const count = await User.countDocuments({ gender: "male" });
+//   console.log("Number of males : " + count);
 
-  //exists() — CHECK EXISTENCE (FAST than findOne) -> return object with object id matched, else null
-  const exists = await User.exists({ emailId: req.body.emailId });
-  console.log(exists);
+//   //exists() — CHECK EXISTENCE (FAST than findOne) -> return object with object id matched, else null
+//   const exists = await User.exists({ emailId: req.body.emailId });
+//   console.log(exists);
 
-  //lean() — RETURN PLAIN JS OBJECT (IMPORTANT) -> returns Plain JS Object, Faster because it has No methods, without lean() it returns mongoose document which is heavy as it has methods. Use when ✔ Read-only data ✔ Performance critical APIs
-  const plainUser = await User.find().lean().limit(1);
-  console.log(plainUser);
+//   //lean() — RETURN PLAIN JS OBJECT (IMPORTANT) -> returns Plain JS Object, Faster because it has No methods, without lean() it returns mongoose document which is heavy as it has methods. Use when ✔ Read-only data ✔ Performance critical APIs
+//   const plainUser = await User.find().lean().limit(1);
+//   console.log(plainUser);
 
-  // QUERY EXECUTION (IMPORTANT CONCEPT)
-  // const query = User.find({ age: { $gt: 18 } }); Only This does NOT hit DB yet.
-  //DB call happens when: -> await query; OR -> query.exec();
+//   // QUERY EXECUTION (IMPORTANT CONCEPT)
+//   // const query = User.find({ age: { $gt: 18 } }); Only This does NOT hit DB yet.
+//   //DB call happens when: -> await query; OR -> query.exec();
 
-  //insertOne() and insertMany()
-});
+//   //insertOne() and insertMany()
+// });
 
 // PUT replaces the entire resource, while PATCH partially updates the resource.
 // patch api to update existing documents
-app.patch("/updateUsers", async (req, res) => {
-  // // save() FOR UPDATE (BEST PRACTICE)
-  // const user = await User.findById(id);
-  // user.age = 25;
-  // await user.save();
+// app.patch("/updateUsers", async (req, res) => {
+//   // // save() FOR UPDATE (BEST PRACTICE)
+//   // const user = await User.findById(id);
+//   // user.age = 25;
+//   // await user.save();
 
-  const { id, ...data } = req.body;
-  try {
-    const user = await User.findByIdAndUpdate(id, data, {
-      new: true,
-      runValidators: true,
-    }); //this will return new updated document, by default if u dont pass new:true, it is false which return old document(before updation) and enforce schema validation, as by default it is false.
-    console.log(user);
-    res.send("user updated successfully\n" + user);
-  } catch (err) {
-    console.log(err);
-    res.status(404).send("some error occured\n" + err.message);
-  }
-});
+//   const { id, ...data } = req.body;
+//   try {
+//     const user = await User.findByIdAndUpdate(id, data, {
+//       new: true,
+//       runValidators: true,
+//     }); //this will return new updated document, by default if u dont pass new:true, it is false which return old document(before updation) and enforce schema validation, as by default it is false.
+//     console.log(user);
+//     res.send("user updated successfully\n" + user);
+//   } catch (err) {
+//     console.log(err);
+//     res.status(404).send("some error occured\n" + err.message);
+//   }
+// });
 // patch api to update document using updateOne() -> (NO DOCUMENT RETURN)
-app.patch("/updateOneUser", async (req, res) => {
-  console.log(req.body);
-  const { emailId, mobileNo, ...data } = req.body;
-  try {
-    const user = await User.updateOne({ emailId, mobileNo }, { $set: data });
-    if (user.matchedCount === 0) {
-      console.log("Failed:Not matched!❌");
-      return res.status(401).send("filters does not match");
-    } else {
-      res.send("updated successfully");
-      console.log("done!!");
-    }
-  } catch (err) {
-    console.log("some error occured\n" + err.message);
-    res.status(404).send("some error occured\n" + err.message);
-  }
-});
+// app.patch("/updateOneUser", async (req, res) => {
+//   console.log(req.body);
+//   const { emailId, mobileNo, ...data } = req.body;
+//   try {
+//     const user = await User.updateOne({ emailId, mobileNo }, { $set: data });
+//     if (user.matchedCount === 0) {
+//       console.log("Failed:Not matched!❌");
+//       return res.status(401).send("filters does not match");
+//     } else {
+//       res.send("updated successfully");
+//       console.log("done!!");
+//     }
+//   } catch (err) {
+//     console.log("some error occured\n" + err.message);
+//     res.status(404).send("some error occured\n" + err.message);
+//   }
+// });
 // updateMany() (BULK UPDATE)
-app.patch("/updateManyUsers", async (req, res) => {
-  const list = await User.updateMany(
-    { gender: "female" },
-    { $set: { age: 21 } }
-  );
-  try {
-    if (list.matchedCount === 0) {
-      res.status(401).send("error occured : no match found");
-      console.log("no match found");
-    } else {
-      res.send("updated successfully : " + list.modifiedCount);
-      console.log("updated successfully : " + list.modifiedCount);
-    }
-  } catch (err) {
-    res.status(400).send("some error occured : " + err.message);
-    console.log("some error occured : " + err.message);
-  }
-});
+// app.patch("/updateManyUsers", async (req, res) => {
+//   const list = await User.updateMany(
+//     { gender: "female" },
+//     { $set: { age: 21 } }
+//   );
+//   try {
+//     if (list.matchedCount === 0) {
+//       res.status(401).send("error occured : no match found");
+//       console.log("no match found");
+//     } else {
+//       res.send("updated successfully : " + list.modifiedCount);
+//       console.log("updated successfully : " + list.modifiedCount);
+//     }
+//   } catch (err) {
+//     res.status(400).send("some error occured : " + err.message);
+//     console.log("some error occured : " + err.message);
+//   }
+// });
 
 //delete api -> to delete documents
-app.delete("/deleteUser", async (req, res) => {
-  // 1) findByIdAndDelete()
-  try {
-    const user = await User.findByIdAndDelete(req.body.id); // returns deleted document or null if not found
-    if (user != null) {
-      res.send("deleted successfully : " + user);
-      console.log("deleted successfully : " + user);
-    } else {
-      res.send("no match found");
-      console.log("no match found");
-    }
-  } catch (err) {
-    res.status(400).send("something went wrong!! : " + err.message);
-    console.log("something went wrong!! : " + err.message);
-  }
+// app.delete("/deleteUser", async (req, res) => {
+//   // 1) findByIdAndDelete()
+//   try {
+//     const user = await User.findByIdAndDelete(req.body.id); // returns deleted document or null if not found
+//     if (user != null) {
+//       res.send("deleted successfully : " + user);
+//       console.log("deleted successfully : " + user);
+//     } else {
+//       res.send("no match found");
+//       console.log("no match found");
+//     }
+//   } catch (err) {
+//     res.status(400).send("something went wrong!! : " + err.message);
+//     console.log("something went wrong!! : " + err.message);
+//   }
 
-  // 2) const result = await User.deleteOne({ emailId: "radhika123@gmail.com" }); // returns : { deletedCount: 1 }
-  // try {
-  //   const result = await User.deleteOne({ emailId: "radhika123@gmail.com" }); // returns deleted document or null if not found
-  //   if (result != null) {
-  //     res.send("deleted successfully : " + result.deletedCount);
-  //     console.log("deleted successfully : " + result.deletedCount);
-  //   } else {
-  //     res.send("no match found");
-  //     console.log("no match found");
-  //   }
-  // } catch (err) {
-  //   res.status(400).send("something went wrong!! : " + err.message);
-  //   console.log("something went wrong!! : " + err.message);
-  // }
-  // 3) const result2 = await User.deleteMany({ gender: "female" });
-  // try {
-  //   const result = await User.deleteMany({ gender: "female" });
-  //   if (result != null) {
-  //     res.send("deleted successfully : " + result.deletedCount);
-  //     console.log("deleted successfully : " + result.deletedCount);
-  //   } else {
-  //     res.send("no match found");
-  //     console.log("no match found");
-  //   }
-  // } catch (err) {
-  //   res.status(400).send("something went wrong!! : " + err.message);
-  //   console.log("something went wrong!! : " + err.message);
-  // }
+//   // 2) const result = await User.deleteOne({ emailId: "radhika123@gmail.com" }); // returns : { deletedCount: 1 }
+//   // try {
+//   //   const result = await User.deleteOne({ emailId: "radhika123@gmail.com" }); // returns deleted document or null if not found
+//   //   if (result != null) {
+//   //     res.send("deleted successfully : " + result.deletedCount);
+//   //     console.log("deleted successfully : " + result.deletedCount);
+//   //   } else {
+//   //     res.send("no match found");
+//   //     console.log("no match found");
+//   //   }
+//   // } catch (err) {
+//   //   res.status(400).send("something went wrong!! : " + err.message);
+//   //   console.log("something went wrong!! : " + err.message);
+//   // }
+//   // 3) const result2 = await User.deleteMany({ gender: "female" });
+//   // try {
+//   //   const result = await User.deleteMany({ gender: "female" });
+//   //   if (result != null) {
+//   //     res.send("deleted successfully : " + result.deletedCount);
+//   //     console.log("deleted successfully : " + result.deletedCount);
+//   //   } else {
+//   //     res.send("no match found");
+//   //     console.log("no match found");
+//   //   }
+//   // } catch (err) {
+//   //   res.status(400).send("something went wrong!! : " + err.message);
+//   //   console.log("something went wrong!! : " + err.message);
+//   // }
 
-  //   //🔴 SOFT DELETE (INTERVIEW FAVORITE)
-  // //Instead of deleting data:
-  // await User.findByIdAndUpdate(id, {
-  //   isDeleted: true
-  // });
-  // //Why? Data recovery, Audit logs, Legal compliance
-  // //🔥 Most companies prefer soft delete
-});
+//   //   //🔴 SOFT DELETE (INTERVIEW FAVORITE)
+//   // //Instead of deleting data:
+//   // await User.findByIdAndUpdate(id, {
+//   //   isDeleted: true
+//   // });
+//   // //Why? Data recovery, Audit logs, Legal compliance
+//   // //🔥 Most companies prefer soft delete
+// });
 
 //login api
 // app.post("/login", async (req, res) => {
@@ -438,3 +580,18 @@ app.delete("/deleteUser", async (req, res) => {
 //     res.status(500).send("Something went wrong");
 //   }
 // });
+
+app.use((req, res) => {
+  res.status(404).json({
+    message: "Route not found",
+    error: `Cannot ${req.method} ${req.originalUrl}`,
+  });
+});
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    message: "Something went wrong on the server",
+    error: err.message,
+  });
+});

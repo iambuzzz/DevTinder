@@ -10,40 +10,46 @@ const bcrypt = require("bcrypt");
 profileRouter.get("/profile", auth, async (req, res) => {
   const user = req.user;
   try {
-    console.log("Profile accessed:", req.user.emailId);
-    res.status(200).send(user);
+    res
+      .status(200)
+      .json({ message: "Profile accessed successfully", data: user });
   } catch (err) {
-    console.error("Profile error:", err.message);
-    res.status(500).send("Something went wrong");
+    res
+      .status(400)
+      .json({ message: "Profile accessed failed", error: err.message });
   }
 });
 
 profileRouter.patch("/profile/edit", auth, async (req, res) => {
   try {
     if (!Object.keys(req.body).length) {
-      return res.status(400).send("Nothing to update");
+      return res
+        .status(400)
+        .json({ message: "Profile Update failed", error: "Nothing to update" });
     }
 
-    if (!validateEditProfileData(req)) {
-      return res.status(400).send("Invalid edit request");
-    }
+    validateEditProfileData(req);
 
-    const user = req.user;
-
-    // Object.keys(req.body).forEach((key) => {
-    //   user[key] = req.body[key];
-    // });
-    //   await user.save();
     const updatedUser = await User.findByIdAndUpdate(req.user._id, req.body, {
       new: true,
       runValidators: true,
     }).select("-password");
 
-    console.log("data changed successfully");
-    res.send(updatedUser);
+    if (!updatedUser) {
+      return res
+        .status(404)
+        .json({ message: "Profile Update failed", error: "User not found" });
+    }
+    res
+      .status(200)
+      .json({
+        message: `${updatedUser.firstName} your profile was updated!`,
+        data: updatedUser,
+      });
   } catch (err) {
-    console.log(err);
-    res.status(400).send("Something went Wrong : " + err.message);
+    res
+      .status(400)
+      .json({ message: "Profile Update failed", error: err.message });
   }
 });
 
@@ -53,25 +59,32 @@ profileRouter.patch("/profile/changepassword", auth, async (req, res) => {
 
     // Validate body presence
     if (!password || !newPassword) {
-      return res.status(400).send("password and newPassword are required");
+      throw new Error("password and newPassword are required");
     }
     // Only allow these 2 keys
     const allowed = ["password", "newPassword"];
     if (!Object.keys(req.body).every((key) => allowed.includes(key))) {
-      return res.status(400).send("Invalid password update request");
+      throw new Error("Invalid password update request");
     }
 
     const user = await User.findById(req.user._id);
 
     const isAllowed = await user.isPasswordCorrect(password);
     if (!isAllowed) {
-      return res.status(401).send("Incorrect current password");
+      return res.status(401).json({
+        message: "Password Update failed",
+        error: "Incorrect current password",
+      });
     }
     if (!validator.isStrongPassword(newPassword)) {
-      return res.status(400).send("New password is too weak");
+      return res.status(400).json({
+        message: "Password Update failed",
+        error: "New password is not strong enough",
+      });
     }
 
     const newPass = await bcrypt.hash(newPassword, 10);
+
     const updatedUser = await User.findByIdAndUpdate(
       user._id,
       { password: newPass },
@@ -80,11 +93,15 @@ profileRouter.patch("/profile/changepassword", auth, async (req, res) => {
         runValidators: true,
       }
     ).select("-password");
-    console.log("Updated password!! \n", updatedUser);
-    res.send(updatedUser);
+
+    res.status(200).json({
+      message: "Password changed successfully",
+      data: updatedUser,
+    });
   } catch (err) {
-    console.error("Profile error:", err.message);
-    res.status(500).send("Something went wrong : " + err.message);
+    res
+      .status(400)
+      .json({ message: "Password Update failed", error: err.message });
   }
 });
 

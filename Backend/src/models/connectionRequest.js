@@ -22,27 +22,44 @@ const connectionRequestSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 }, { unique: true });
+
+connectionRequestSchema.pre("save", function () {
+  if (this.fromUserId.equals(this.toUserId)) {
+    throw new Error("Invalid request! cannot send request to yourself!");
+  }
+});
+
+const ConnectionRequest = mongoose.model(
+  "ConnectionRequests",
+  connectionRequestSchema
+);
+
+module.exports = ConnectionRequest;
+
+// ----------------------------------------------------------------------------------
+
 //creating indexes for fast querying
 // An index is like a book index — it makes finding data fast.
 // Without index → MongoDB scans every document in a collection (called COLLSCAN).
 // With index → MongoDB jumps directly to matching records (called IXSCAN).
-// ✔️ Unique Index Example
+// -> Unique Index Example
 // emailId: {
 //   type: String,
 //   unique: true
 // }
-// ✔️ Simple Index
+// -> Simple Index
 // userSchema.index({ emailId: 1 });
-// ✔️ Descending Index
+// -> Descending Index
 // userSchema.index({ createdAt: -1 });
-// ⚠️ BUT — Indexes Have Cost
+// !! BUT — Indexes Have Cost
 // Cost	                    Why
 // Slow write operations-	MongoDB updates index on every insert/update
 // Takes disk space-        Index stored on disk
 // Bad indexes slow DB-     too many or wrong indexes hurt performance
 // SO:Only create indexes for fields you query frequently.
 
-// 🔥 INDEX ORDER MATTERS
+// ** INDEX ORDER MATTERS
 // MongoDB follows:
 // LEFT PREFIX RULE
 // For:
@@ -61,15 +78,4 @@ const connectionRequestSchema = new mongoose.Schema(
 // Useful for optional fields
 // userSchema.index({ phone: 1 }, { sparse: true });
 
-connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 }, { unique: true }); //Supports queries using firstName + lastName and uniqueness is on the combination together, not individually
-
-connectionRequestSchema.pre("save", function () {
-  if (this.fromUserId.equals(this.toUserId)) {
-    throw new Error("Invalid request! cannot send request to yourself!");
-  }
-});
-const ConnectionRequest = mongoose.model(
-  "ConnectionRequests",
-  connectionRequestSchema
-);
-module.exports = ConnectionRequest;
+// connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 }, { unique: true }); //Supports queries using firstName + lastName and uniqueness is on the combination together, not individually

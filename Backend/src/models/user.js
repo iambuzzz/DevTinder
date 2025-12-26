@@ -1,8 +1,6 @@
-//what fields a user can have - user schema
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-
-//defining schema for user collection
+const validator = require("validator");
 const userSchema = new mongoose.Schema(
   {
     firstName: {
@@ -33,7 +31,7 @@ const userSchema = new mongoose.Schema(
 
     age: {
       type: Number,
-      min: 18,
+      min: 16,
       max: 150,
     },
 
@@ -45,18 +43,44 @@ const userSchema = new mongoose.Schema(
     mobileNo: {
       type: String,
     },
+
+    skillsOrInterests: {
+      type: [String],
+      validate: {
+        validator: function (v) {
+          return v.length <= 15;
+        },
+        message: "You can add a maximum of 15 skills/interests.",
+      },
+    },
+
+    photoURL: {
+      type: String,
+      default:
+        "https://www.shutterstock.com/image-vector/vector-flat-illustration-grayscale-avatar-600nw-2264922221.jpg",
+      validate: {
+        validator: function (v) {
+          return validator.isURL(v);
+        },
+        message: "Invalid Photo URL",
+      },
+    },
   },
   {
     timestamps: true,
   }
 );
+
 userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
+const User = mongoose.model("User", userSchema);
+module.exports = User;
+
+// ----------------------------------------------------------------------------------
+
 //created model for User collection -> this User collection will be stored in mongodb as "users" (plural+lowercase)
 // it is basically a class of User and we will be creating multiple instances of this User class
 //and these instances will be the documents inside our users collection.
-const User = mongoose.model("User", userSchema);
 // arguments -> name of model or class with which we will refer it and schema of the collection.
-module.exports = User;

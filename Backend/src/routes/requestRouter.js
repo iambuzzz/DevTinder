@@ -16,12 +16,17 @@ requestRouter.post(
 
       const allowedStatus = ["ignored", "interested"];
       if (!allowedStatus.includes(status)) {
-        return res.status(400).send("Invalid Status!");
+        return res
+          .status(400)
+          .json({ message: "Request sending failed", error: "Invalid Status" });
       }
 
       const toUser = await User.findById(toUserId);
       if (!toUser) {
-        return res.status(404).send("User not found!");
+        return res.status(404).json({
+          message: "Request sending failed",
+          error: "User not found",
+        });
       }
 
       const existingReq = await ConnectionRequest.findOne({
@@ -31,7 +36,10 @@ requestRouter.post(
         ],
       });
       if (existingReq) {
-        return res.status(400).send("Request already exist!");
+        return res.status(400).json({
+          message: "Request sending failed",
+          error: "Request already exists",
+        });
       }
 
       const connectionRequest = new ConnectionRequest({
@@ -43,11 +51,12 @@ requestRouter.post(
       const data = await connectionRequest.save();
       res.json({
         message: "Connection Request send successfully!",
-        data,
+        data: data,
       });
     } catch (err) {
-      console.log(err);
-      res.status(400).send("ERROR : " + err.message);
+      res
+        .status(400)
+        .json({ message: "Request sending failed", error: err.message });
     }
   }
 );
@@ -60,7 +69,7 @@ requestRouter.post(
       const status = req.params.status;
       const allowedStatus = ["accepted", "rejected"];
       if (!allowedStatus.includes(status)) {
-        throw new Error("Invalid Status!");
+        throw new Error("Invalid status");
       }
       const requestId = req.params.requestId;
       const request = await ConnectionRequest.findById(requestId);
@@ -69,17 +78,18 @@ requestRouter.post(
         throw new Error("Request does not exist");
       }
       if (!request.toUserId.equals(loggedinUser._id)) {
-        throw new Error("Not Authorized to Accept Or Reject the reqeust!");
+        throw new Error("Not authorized to accept or reject the reqeust");
       }
       if (!request.status === "interested") {
-        throw new Error("Not Authorized to Accept Or Reject the reqeust!!");
+        throw new Error("Not authorized to accept or reject the reqeust");
       }
       request.status = status;
       const data = await request.save();
-      console.log(data);
-      res.send("Request " + status + " successfully!");
+      res.status(200).json({ message: "Request " + status + " successfully!" });
     } catch (err) {
-      res.status(400).send("Something went wrong : " + err.message);
+      res
+        .status(400)
+        .send({ message: `Request accept/reject failed`, error: err.message });
     }
   }
 );

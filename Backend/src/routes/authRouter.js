@@ -8,13 +8,22 @@ require("dotenv").config();
 
 authRouter.post("/signup", async (req, res) => {
   try {
-    const { firstName, lastName, emailId, password, age, gender, mobileNo } =
-      req.body;
-    // Validate input (may throw)
+    const {
+      firstName,
+      lastName,
+      emailId,
+      password,
+      age,
+      gender,
+      mobileNo,
+      skillsOrInterests,
+      photoURL,
+    } = req.body;
+
     validateSignupData(req);
-    // Hash password
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    // Create user
+
     const user = new User({
       firstName,
       lastName,
@@ -23,16 +32,32 @@ authRouter.post("/signup", async (req, res) => {
       age,
       gender,
       mobileNo,
+      skillsOrInterests,
+      photoURL,
     });
-    // 4️⃣ Save to DB
-    await user.save();
-    console.log("User created:", user._id);
-    res.status(201).send("Signup successful");
+
+    const savedUser = await user.save();
+
+    //generate JWT token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+    // Send cookie
+    res.cookie("authToken", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    res.status(201).json({ message: "Signup successful" });
   } catch (err) {
-    console.error("Signup error:", err.message);
     // Duplicate email error
     if (err.code === 11000) {
-      return res.status(409).send("Email already registered");
+      return res.status(409).json({
+        message: "Signup failed",
+        error: "Email already registered",
+      });
     }
     // Other validation / server errors
     res.status(400).json({
@@ -48,19 +73,20 @@ authRouter.post("/login", async (req, res) => {
     validateLoginData(req);
     const user = await User.findOne({ emailId });
     if (!user) {
-      console.log("email not found");
-      return res.status(401).send("Invalid credentials");
+      return res
+        .status(401)
+        .json({ message: "Login failed", error: "Invalid credentials" });
     } else {
       const isMatch = await user.isPasswordCorrect(password);
       if (!isMatch) {
-        console.log("wrong password!");
-        return res.status(401).send("Invalid credentials");
+        return res
+          .status(401)
+          .json({ message: "Login failed", error: "Invalid credentials" });
       } else {
         // Create JWT
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
           expiresIn: "7d",
         });
-        console.log("Login successful");
         // Send cookie
         res.cookie("authToken", token, {
           httpOnly: true,
@@ -68,19 +94,21 @@ authRouter.post("/login", async (req, res) => {
           sameSite: "strict",
           expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         });
-        return res.send("Login successful");
+
+        return res.status(200).json({ message: "Login successful" });
       }
     }
   } catch (err) {
-    console.log(err);
-    res.status(400).send(err.message);
+    res.status(400).json({ message: "Login failed", error: err.message });
   }
 });
 
 authRouter.post("/logout", async (req, res) => {
-  res.clearCookie("authToken");
-  console.log("Logged out");
-  return res.send("Logged out");
+  res.cookie("authToken", null, {
+    expires: new Date(Date.now()),
+    httpOnly: true,
+  });
+  return res.status(200).json({ message: "Logged out successfully" });
 });
 
 module.exports = authRouter;
