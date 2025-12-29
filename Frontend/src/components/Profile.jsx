@@ -166,7 +166,7 @@ const Profile = () => {
         {showPreview && (
           <div
             className="fixed inset-0 z-[100] flex items-center justify-center bg-blue-900/40 backdrop-blur-xl animate-in fade-in duration-300"
-            onClick={() => setShowPreview(false)} // Kahin bhi click karne par preview band ho jaye
+            onClick={() => setShowPreview(true)} // Kahin bhi click karne par preview band ho jaye
           >
             <div
               className="relative w-[90%] max-w-[360px] md:max-w-[400px] h-[600px] animate-in zoom-in duration-300"
@@ -174,13 +174,19 @@ const Profile = () => {
             >
               {/* Close Button */}
               <button
-                className="absolute -top-12 right-0 text-white/80 font-bold hover:text-white/50 px-4 py-2 rounded-full border-none transition-all"
-                onClick={() => setShowPreview(false)}
+                className="absolute -top-8 right-0 z-[200] text-white/50 hover:text-white text-lg mr-4 transition-all cursor-pointer"
+                onClick={(e) => {
+                  setShowPreview(false);
+                }}
               >
                 ✕
               </button>
 
-              <UserCard user={getPreviewData()} isTopCard={true} />
+              <UserCard
+                user={getPreviewData()}
+                isTopCard={true}
+                isPreview={true}
+              />
             </div>
           </div>
         )}

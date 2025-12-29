@@ -5,13 +5,12 @@ import { BASE_URL } from "../utils/constants";
 import { useDispatch } from "react-redux";
 import { removeFeed } from "../utils/feedSlice";
 
-const UserCard = ({ user, isTopCard }) => {
+const UserCard = ({ user, isTopCard, isPreview }) => {
   const { _id, firstName, photoURL, age, skillsOrInterests, about } = user;
   const dispatch = useDispatch();
 
   // State to toggle full about text
   const [showFullAbout, setShowFullAbout] = useState(false);
-
   // Drag logic values
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-25, 25]);
@@ -73,9 +72,10 @@ const UserCard = ({ user, isTopCard }) => {
         zIndex: isTopCard ? 10 : 1,
         perspective: 1500,
       }}
-      drag={isTopCard ? "x" : false}
+      drag={isTopCard && !isPreview ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}
       onDragEnd={(e, info) => {
+        if (isPreview) return;
         if (info.offset.x > 150) handleRequest("interested");
         else if (info.offset.x < -150) handleRequest("ignored");
       }}
@@ -84,7 +84,9 @@ const UserCard = ({ user, isTopCard }) => {
         mouseX.set(0);
         mouseY.set(0);
       }}
-      className="absolute w-full h-full cursor-grab active:cursor-grabbing"
+      className={`absolute w-full h-full ${
+        !isPreview ? "cursor-grab active:cursor-grabbing" : ""
+      }`}
     >
       <motion.div
         style={{
