@@ -74,7 +74,7 @@ userRouter.get("/feed", auth, async (req, res) => {
     const loggedinUser = req.user;
 
     const page = parseInt(req.query.page) || 1;
-    let limit = parseInt(req.query.limit) || 2;
+    let limit = parseInt(req.query.limit) || 10;
     limit = limit > 50 ? 50 : limit;
     const skip = (page - 1) * limit;
 
@@ -92,7 +92,9 @@ userRouter.get("/feed", auth, async (req, res) => {
     const users = await User.find({
       _id: { $nin: Array.from(hideUsersFromFeed) },
     })
-      .select("_id firstName lastName age gender photoURL")
+      .select(
+        "_id firstName lastName age gender photoURL skillsOrInterests about"
+      )
       .skip(skip)
       .limit(limit);
 

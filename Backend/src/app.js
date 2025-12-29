@@ -7,6 +7,7 @@ const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const auth = require("./middlewares/auth.js");
 require("dotenv").config();
+const cors = require("cors");
 
 const {
   validateSignupData,
@@ -30,6 +31,12 @@ const start = async () => {
 };
 start();
 
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 

@@ -16,8 +16,8 @@ authRouter.post("/signup", async (req, res) => {
       age,
       gender,
       mobileNo,
-      skillsOrInterests,
-      photoURL,
+      // skillsOrInterests,
+      // photoURL,
     } = req.body;
 
     validateSignupData(req);
@@ -31,9 +31,9 @@ authRouter.post("/signup", async (req, res) => {
       password: hashedPassword,
       age,
       gender,
-      mobileNo,
-      skillsOrInterests,
-      photoURL,
+      mobileNo: "",
+      // skillsOrInterests,
+      // photoURL,
     });
 
     const savedUser = await user.save();
@@ -50,7 +50,9 @@ authRouter.post("/signup", async (req, res) => {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
-    res.status(201).json({ message: "Signup successful" });
+    delete user.password;
+
+    res.status(201).json({ message: "Signup successful", data: user });
   } catch (err) {
     // Duplicate email error
     if (err.code === 11000) {
@@ -95,7 +97,12 @@ authRouter.post("/login", async (req, res) => {
           expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         });
 
-        return res.status(200).json({ message: "Login successful" });
+        const { password, ...updatedUser } = user.toObject();
+
+        return res.status(200).json({
+          message: "Login successful",
+          data: updatedUser,
+        });
       }
     }
   } catch (err) {

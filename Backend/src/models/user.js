@@ -65,6 +65,12 @@ const userSchema = new mongoose.Schema(
         message: "Invalid Photo URL",
       },
     },
+    about: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+      default: "",
+    },
   },
   {
     timestamps: true,

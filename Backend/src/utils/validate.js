@@ -1,20 +1,12 @@
 const validator = require("validator");
 
 function validateSignupData(req) {
-  const {
-    firstName,
-    lastName,
-    emailId,
-    password,
-    age,
-    gender,
-    mobileNo,
-    skillsOrInterests,
-    photoURL,
-  } = req.body;
+  const { firstName, lastName, emailId, password, age, gender } = req.body;
 
-  if (!firstName || !emailId || !password) {
-    throw new Error("Please enter required fields");
+  // 1. Mandatory Fields Check (Strict)
+  // Check if fields are missing, empty strings, or just spaces
+  if (!firstName?.trim() || !emailId?.trim() || !password || !age || !gender) {
+    throw new Error("All fields marked with * are mandatory!");
   }
 
   if (firstName.length < 3 || firstName.length > 30) {
@@ -39,45 +31,46 @@ function validateSignupData(req) {
       minSymbols: 1,
     })
   ) {
-    throw new Error("Password must be strong");
-  }
-
-  if (age !== undefined) {
-    if (!Number.isInteger(age) || age < 10 || age > 120) {
-      throw new Error("Enter valid age");
-    }
-  }
-
-  if (gender && !["male", "female", "other"].includes(gender)) {
-    throw new Error("Enter valid gender");
-  }
-
-  if (mobileNo && !validator.isMobilePhone(mobileNo, "en-IN")) {
-    throw new Error("Enter valid mobile number");
-  }
-
-  if (skillsOrInterests) {
-    if (!Array.isArray(skillsOrInterests)) {
-      throw new Error("Skills must be an array of strings");
-    }
-    if (skillsOrInterests.length > 15) {
-      throw new Error("Cannot add more than 15 skills");
-    }
-    // Check if every item in array is a string and not too long
-    const isValid = skillsOrInterests.every(
-      (skill) => typeof skill === "string" && skill.length < 50
+    throw new Error(
+      "Password must be strong: 8+ chars, Uppercase, Number & Symbol"
     );
-    if (!isValid) {
-      throw new Error("Each skill must be a string and under 50 characters");
-    }
   }
 
-  if (photoURL) {
-    const isUrlValid = validator.isURL(photoURL);
-    if (!isUrlValid) {
-      throw new Error("Invalid Photo URL");
-    }
+  const ageNum = Number(age);
+  if (isNaN(ageNum) || ageNum < 16 || ageNum > 120) {
+    throw new Error("Age must be between 16 and 120");
   }
+
+  if (!["male", "female", "other"].includes(gender.toLowerCase())) {
+    throw new Error("Please select a valid gender");
+  }
+
+  // if (mobileNo && !validator.isMobilePhone(mobileNo, "en-IN")) {
+  //   throw new Error("Enter valid mobile number");
+  // }
+
+  // if (skillsOrInterests) {
+  //   if (!Array.isArray(skillsOrInterests)) {
+  //     throw new Error("Skills must be an array of strings");
+  //   }
+  //   if (skillsOrInterests.length > 15) {
+  //     throw new Error("Cannot add more than 15 skills");
+  //   }
+  //   // Check if every item in array is a string and not too long
+  //   const isValid = skillsOrInterests.every(
+  //     (skill) => typeof skill === "string" && skill.length < 50
+  //   );
+  //   if (!isValid) {
+  //     throw new Error("Each skill must be a string and under 50 characters");
+  //   }
+  // }
+
+  // if (photoURL) {
+  //   const isUrlValid = validator.isURL(photoURL);
+  //   if (!isUrlValid) {
+  //     throw new Error("Invalid Photo URL");
+  //   }
+  // }
 }
 
 function validateLoginData(req) {
@@ -99,6 +92,7 @@ function validateEditProfileData(req) {
     "mobileNo",
     "skillsOrInterests",
     "photoURL",
+    "about",
   ];
 
   const requestedFields = Object.keys(req.body);
@@ -164,6 +158,12 @@ function validateEditProfileData(req) {
     if (!isValidSkills) {
       throw new Error("Each skill must be a valid string under 50 characters");
     }
+  }
+  if (
+    req.body.about &&
+    (req.body.about.length < 3 || req.body.about.length > 100)
+  ) {
+    throw new Error("About must be between 3-100 characters");
   }
 
   return true;
