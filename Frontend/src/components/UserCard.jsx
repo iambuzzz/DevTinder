@@ -4,7 +4,7 @@ import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 import { useDispatch } from "react-redux";
 import { removeFeed } from "../utils/feedSlice";
-
+import { removeRequest } from "../utils/requestSlice";
 const UserCard = ({ user, isTopCard, isPreview }) => {
   const { _id, firstName, photoURL, age, skillsOrInterests, about } = user;
   const dispatch = useDispatch();
@@ -18,15 +18,21 @@ const UserCard = ({ user, isTopCard, isPreview }) => {
 
   const handleRequest = (status) => {
     // Optimistic Update: UI se pehle hatao
-    dispatch(removeFeed(_id));
+    if (user.requestId) {
+      dispatch(removeRequest(user.requestId));
+    } else {
+      dispatch(removeFeed(user._id));
+    }
+
+    const url = user.requestId
+      ? `${BASE_URL}request/review/${
+          status === "interested" ? "accepted" : "rejected"
+        }/${user.requestId}`
+      : `${BASE_URL}request/send/${status}/${_id}`;
 
     // API Call: Backend update karo
     axios
-      .post(
-        BASE_URL + "request/send/" + status + "/" + _id,
-        {},
-        { withCredentials: true }
-      )
+      .post(url, {}, { withCredentials: true })
       .then((res) => console.log(status + " request successful"))
       .catch((err) => console.error("Request failed", err));
   };
