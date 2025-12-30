@@ -6,7 +6,7 @@ import { addRequests } from "../utils/requestSlice"; // Naya slice
 import UserCard from "./UserCard";
 
 const RequestsFeed = () => {
-  const requests = useSelector((store) => store.requests || []);
+  const requests = useSelector((store) => store.requests);
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
 
@@ -16,9 +16,6 @@ const RequestsFeed = () => {
         withCredentials: true,
       });
 
-      console.log("Full API Response:", res.data); // DEBUGGING KE LIYE
-
-      // API structure check: res.data.data array hona chahiye
       const rawData = res.data.data || [];
 
       if (!Array.isArray(rawData)) {
@@ -33,7 +30,6 @@ const RequestsFeed = () => {
           requestId: item._id,
         }));
 
-      console.log("Formatted Data for Cards:", formattedData);
       dispatch(addRequests(formattedData));
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -48,8 +44,9 @@ const RequestsFeed = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-black">
+      <div className="flex justify-center items-center min-h-screen bg-black/50">
         <span className="loading loading-spinner loading-lg text-violet-600"></span>
+        <span className="px-4">Loading...</span>
       </div>
     );
   }
@@ -64,13 +61,13 @@ const RequestsFeed = () => {
     >
       <div className="hero-overlay bg-black/70"></div>
 
-      <div className="hero-content text-center p-0 w-full z-10">
+      <div className="hero-content text-center p-0 my-16 w-full z-10">
         <div className="flex flex-col items-center w-full px-4">
           <div className="mb-6">
-            <h1 className="text-3xl font-black text-white tracking-tighter uppercase italic">
+            <h1 className="text-3xl mx-6 font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 tracking-tighter uppercase italic ">
               Review Requests
             </h1>
-            <div className="badge badge-secondary font-bold px-4 py-3 mt-2">
+            <div className="badge badge-secondary font-bold px-4 py-3 mt-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-none text-white">
               {requests?.length || 0} Pending
             </div>
           </div>

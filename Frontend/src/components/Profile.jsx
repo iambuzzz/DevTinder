@@ -350,7 +350,7 @@ const Profile = () => {
                 <textarea
                   name="skillsOrInterests"
                   type="text"
-                  className="w-full bg-black/40 border border-gray-600 text-white p-3 rounded-lg outline-none focus:border-violet-500 transition-all textarea textarea-bordered h-28"
+                  className="w-full text-[16px] bg-black/40 border border-gray-600 text-white p-3 rounded-lg outline-none focus:border-violet-500 transition-all textarea textarea-bordered h-28"
                   value={formData.skillsOrInterests}
                   onChange={handleChange}
                   placeholder="Your skills or interests"

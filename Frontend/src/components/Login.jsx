@@ -5,19 +5,33 @@ import { addUser } from "../utils/userSlice";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../utils/constants";
 import { addFeed } from "../utils/feedSlice";
+import { addRequests } from "../utils/requestSlice";
 
 const Login = () => {
-  const [email, setEmail] = useState("ambujjaiswal@gmail.com");
-  const [password, setPassword] = useState("Ambuj@123");
+  const [email, setEmail] = useState("vinitajangra@gmail.com");
+  const [password, setPassword] = useState("Vinita@123");
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [responseErr, setResponseErr] = useState("");
 
+  // CHANGE 1: Loading state banaya
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleLogin = async () => {
+    // Basic validation taaki khali hone par call na jaye
+    if (!email || !password) {
+      setResponseErr("Please enter email and password");
+      return;
+    }
+
+    setResponseErr(""); // Purana error hatao
+    setIsLoading(true); // CHANGE 2: Loading start
+
     const obj = {
       emailId: email,
       password: password,
     };
+
     try {
       const res = await axios.post(BASE_URL + "login", obj, {
         withCredentials: true,
@@ -25,14 +39,20 @@ const Login = () => {
       const res2 = await axios.get(BASE_URL + "feed", {
         withCredentials: true,
       });
+      const res3 = await axios.get(BASE_URL + "user/requests", {
+        withCredentials: true,
+      });
       const userData = res.data.data;
       const feedData = res2.data.data || [];
+      const reqData = res3.data.data || [];
+
       dispatch(addUser(userData));
       dispatch(addFeed(feedData));
-      console.log(res.data.message);
+      dispatch(addRequests(reqData));
+
       navigate("/");
     } catch (err) {
-      console.log(err);
+      console.log(err.message);
       if (!navigator.onLine) {
         setResponseErr("No internet connection. Please check your network.");
         return;
@@ -52,11 +72,14 @@ const Login = () => {
         "Something went wrong. Please try again.";
 
       setResponseErr(errorMessage);
+    } finally {
+      // CHANGE 3: Chahe success ho ya error, loading band honi chahiye
+      // Note: Agar navigate ho gaya to ye component unmount ho jayega, jo ki fine hai.
+      setIsLoading(false);
     }
   };
 
   return (
-    // CHANGE 1: Hero Container with Background Image
     <div
       className="hero min-h-screen bg-base-200"
       style={{
@@ -64,15 +87,12 @@ const Login = () => {
           "url(https://tinder.com/static/build/8ad4e4299ef5e377d2ef00ba5c94c44c.webp)",
       }}
     >
-      {/* CHANGE 2: Dark Overlay */}
       <div className="hero-overlay bg-black/50"></div>
 
-      {/* CHANGE 3: Content Wrapper */}
       <div className="hero-content flex-col w-full">
         <div className="w-full max-w-md p-8 bg-base-300/50 rounded-xl shadow-2xl border border-white/40 backdrop-blur-sm">
           <h2 className="text-3xl font-extrabold text-white mb-6">Login</h2>
 
-          {/* Error Message Section */}
           {responseErr && (
             <div className="flex items-center gap-2 mb-4 p-3 bg-red-500/10 border border-red-500/50 text-red-400 text-sm rounded-lg animate-in fade-in zoom-in duration-300">
               <svg
@@ -124,12 +144,25 @@ const Login = () => {
               />
             </div>
 
+            {/* CHANGE 4: Button with Loader Logic */}
             <button
-              className="btn btn-primary w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-none text-white font-bold py-3 mt-2 rounded-lg transition-colors"
+              className={`btn w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-none text-white font-bold py-3 mt-2 rounded-lg transition-colors ${
+                isLoading ? "opacity-70 cursor-not-allowed" : ""
+              }`}
               onClick={handleLogin}
+              disabled={isLoading} // Button disable kar diya taaki double click na ho
             >
-              Login
+              {isLoading ? (
+                // Spinner UI
+                <span className="flex items-center justify-center gap-2">
+                  <span className="loading loading-spinner loading-md"></span>
+                  Logging in...
+                </span>
+              ) : (
+                "Login"
+              )}
             </button>
+
             <div className="mt-1 text-center">
               <p className="text-gray-400 text-sm">
                 Don't have an account?{" "}

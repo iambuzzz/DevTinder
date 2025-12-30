@@ -6,11 +6,15 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { removeUser } from "../utils/userSlice";
 import { removeFeed, clearFeed } from "../utils/feedSlice";
+import { clearRequests } from "../utils/requestSlice";
+import { removeConnection } from "../utils/connectionSlice"; // Optional: Agar connections clear karne ho logout par
 
 const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const user = useSelector((store) => store.user);
+  const request = useSelector((store) => store.requests);
+
   const [notification, setNotification] = useState(0);
   const [showAuthButtons, setShowAuthButtons] = useState(false);
 
@@ -28,7 +32,9 @@ const Navbar = () => {
       dispatch(removeUser());
       dispatch(removeFeed());
       dispatch(clearFeed());
-      navigate("/");
+      dispatch(clearRequests());
+      dispatch(removeConnection()); // Agar connection slice clear karna ho toh
+      navigate("/home");
     } catch (err) {
       console.error("Logout failed", err);
     }
@@ -36,11 +42,6 @@ const Navbar = () => {
 
   return (
     <div>
-      {/* CHANGES HERE:
-        1. 'fixed top-0 w-full z-50': Navbar ko screen ke top par fix kar diya.
-        2. 'bg-gradient-to-b from-black/60 to-transparent': Tinder jaisa halka shadow diya taaki logo clear dikhe.
-        3. 'bg-base-300' hata diya taaki background transparent ho jaye.
-      */}
       <div className="navbar fixed top-0 w-full z-50 bg-gradient-to-b from-black/60 to-transparent shadow-none pr-2 pl-1 md:pr-8 md:pl-6 transition-all duration-300">
         <div className="flex-1">
           <Link
@@ -59,7 +60,36 @@ const Navbar = () => {
               {user ? (
                 <>
                   {/* Logged In View */}
-                  <button className="btn btn-ghost btn-circle mr-2 text-white hover:bg-white/20 transition-all">
+
+                  {/* --- NEW CHANGE: Connections Button Added Here --- */}
+                  <button
+                    className="btn btn-ghost btn-circle mr-1 text-white hover:bg-white/20 transition-all"
+                    onClick={() => navigate("/connection")}
+                    title="Connections"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                      />
+                    </svg>
+                  </button>
+                  {/* ----------------------------------------------- */}
+
+                  {/* Request/Notification Button */}
+                  <button
+                    className="btn btn-ghost btn-circle mr-2 text-white hover:bg-white/20 transition-all"
+                    onClick={() => navigate("/request")}
+                    title="Requests"
+                  >
                     <div className="indicator">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -75,9 +105,9 @@ const Navbar = () => {
                           d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                         />
                       </svg>
-                      {notification !== 0 && (
+                      {request && request.length !== 0 && (
                         <span className="badge badge-xs badge-primary indicator-item">
-                          {notification}
+                          {request.length}
                         </span>
                       )}
                     </div>
@@ -125,9 +155,12 @@ const Navbar = () => {
                       <li>
                         <a
                           className="text-sm"
-                          onClick={() => document.activeElement.blur()}
+                          onClick={() => {
+                            document.activeElement.blur();
+                            navigate("/chat");
+                          }}
                         >
-                          Settings
+                          Messages
                         </a>
                       </li>
                       <li>

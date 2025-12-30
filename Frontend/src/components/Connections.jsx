@@ -90,8 +90,8 @@ const Connections = () => {
 
           {/* Search Bar */}
         </div>
-        <div className="relative group mb-8 md:px-3">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <div className="relative group mb-8 px-3">
+          <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none z-50">
             <svg
               className="w-5 h-5 text-gray-500 group-focus-within:text-violet-500 transition-colors"
               fill="none"
@@ -165,7 +165,7 @@ const Connections = () => {
                   </div>
 
                   {/* Skills Pills (Optional - agar backend se skills mangwaye ho) */}
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  {/* <div className="mt-4 flex flex-wrap gap-2">
                     {user.skillsOrInterests &&
                       Array.isArray(user.skillsOrInterests) &&
                       user.skillsOrInterests.slice(0, 3).map((skill, i) => (
@@ -176,12 +176,12 @@ const Connections = () => {
                           {skill}
                         </span>
                       ))}
-                  </div>
+                  </div> */}
 
                   {/* Actions Buttons */}
                   <div className="flex gap-3 mt-6">
                     <Link
-                      to={`/chat/${user._id}`} // Chat route (Chat feature jab banaoge tab kaam aayega)
+                      to={`/chat`} // Chat route (Chat feature jab banaoge tab kaam aayega)
                       className="flex-1 flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white py-2.5 rounded-xl font-semibold transition-all active:scale-95 text-sm"
                     >
                       <svg
