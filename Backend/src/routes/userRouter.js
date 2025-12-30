@@ -9,7 +9,16 @@ userRouter.get("/user/requests", auth, async (req, res) => {
     const requests = await ConnectionRequest.find({
       toUserId: req.user._id,
       status: "interested",
-    }).populate("fromUserId", ["firstName", "lastName"]);
+    }).populate("fromUserId", [
+      "_id",
+      "firstName",
+      "lastName",
+      "age",
+      "gender",
+      "about",
+      "skillsOrInterests",
+      "photoURL",
+    ]);
 
     if (requests.length === 0) {
       return res.json({ message: "No Pending requests!", data: requests });
@@ -34,8 +43,14 @@ userRouter.get("/user/connections", auth, async (req, res) => {
         { fromUserId: req.user._id, status: "accepted" },
       ],
     })
-      .populate("fromUserId", "firstName lastName")
-      .populate("toUserId", "firstName lastName");
+      .populate(
+        "fromUserId",
+        "firstName lastName photoURL about age gender skillsOrInterests"
+      ) // Added fields
+      .populate(
+        "toUserId",
+        "firstName lastName photoURL about age gender skillsOrInterests"
+      );
 
     if (!requests.length) {
       return res
