@@ -29,7 +29,6 @@ const start = async () => {
     console.error("Startup failed", err);
   }
 };
-start();
 
 app.use(
   cors({
@@ -40,10 +39,12 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/", authRouter);
-app.use("/", profileRouter);
-app.use("/", requestRouter);
-app.use("/", userRouter);
+app.use("/api/", authRouter);
+app.use("/api/", profileRouter);
+app.use("/api/", requestRouter);
+app.use("/api/", userRouter);
+
+start();
 
 //------------------------------------------------------------------------
 
