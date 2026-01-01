@@ -8,6 +8,14 @@ const jwt = require("jsonwebtoken");
 const auth = require("./middlewares/auth.js");
 require("dotenv").config();
 const cors = require("cors");
+const path = require("path");
+// require("./utils/cronjob");
+// NODE_ENV ke basis par file path decide karo
+const envFile =
+  process.env.NODE_ENV === "production" ? ".env.production" : ".env";
+// Specific path se config load karo
+require("dotenv").config({ path: path.resolve(process.cwd(), envFile) });
+console.log("Loaded env file:", envFile);
 
 const {
   validateSignupData,
@@ -32,7 +40,12 @@ const start = async () => {
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://iambuzzdev.in",
+      "http://13.48.58.37",
+      "https://13.48.58.37",
+    ],
     credentials: true,
   })
 );

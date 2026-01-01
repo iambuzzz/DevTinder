@@ -4,7 +4,7 @@ const { validateSignupData, validateLoginData } = require("../utils/validate");
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
+const { sendEmail } = require("../utils/sendEmail");
 
 authRouter.post("/signup", async (req, res) => {
   try {
@@ -85,6 +85,23 @@ authRouter.post("/login", async (req, res) => {
           .status(401)
           .json({ message: "Login failed", error: "Invalid credentials" });
       } else {
+        //   try {
+        //     const subject = "Welcome to DevTinder, " + user.firstName + "!";
+        //     const bodyHtml = `
+        //   <h1>Hi ${user.firstName},</h1>
+        //   <p>Login Successfull</p>
+        // `;
+        //     const bodyText = `Hi ${user.firstName}, Welcome to DevTinder!`;
+
+        //     // Email bhejo
+        //     await sendEmail(emailId, subject, bodyHtml, bodyText);
+        //   } catch (emailError) {
+        //     // Agar email fail bhi ho jaye, toh signup fail nahi hona chahiye
+        //     console.error(
+        //       "Email sending failed but signup continued:",
+        //       emailError
+        //     );
+        //   }
         // Create JWT
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
           expiresIn: "7d",
@@ -92,7 +109,6 @@ authRouter.post("/login", async (req, res) => {
         // Send cookie
         res.cookie("authToken", token, {
           httpOnly: true,
-
           expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         });
 

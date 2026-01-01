@@ -1,7 +1,6 @@
 const express = require("express");
 const auth = require("../middlewares/auth.js");
 const { validateEditProfileData } = require("../utils/validate.js");
-require("dotenv").config();
 const User = require("../models/user.js");
 const profileRouter = express.Router();
 const validator = require("validator");
@@ -40,12 +39,10 @@ profileRouter.patch("/profile/edit", auth, async (req, res) => {
         .status(404)
         .json({ message: "Profile Update failed", error: "User not found" });
     }
-    res
-      .status(200)
-      .json({
-        message: `${updatedUser.firstName} your profile was updated!`,
-        data: updatedUser,
-      });
+    res.status(200).json({
+      message: `${updatedUser.firstName} your profile was updated!`,
+      data: updatedUser,
+    });
   } catch (err) {
     res
       .status(400)
