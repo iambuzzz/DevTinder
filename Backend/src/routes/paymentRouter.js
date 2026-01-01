@@ -52,7 +52,7 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
     const isWebhookValid = validateWebhookSignature(
       req.body,
-      req.headers("x-razorpay-signature"),
+      req.headers["x-razorpay-signature"],
       webhookSecret
     );
     if (!isWebhookValid) {
@@ -66,7 +66,7 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
     const payment = await Payment.findOne({ orderId: paymentData.order_id });
     payment.status = paymentData.status;
     payment.paymentId = paymentData.id;
-    payment.signature = req.headers("x-razorpay-signature");
+    payment.signature = req.headers["x-razorpay-signature"];
     const updatedPayment = await payment.save();
 
     const user = await User.findById(payment.userId);
@@ -96,6 +96,45 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
       msg: "Payment verification failed",
       error: error.message,
     });
+  }
+});
+
+const crypto = require("crypto");
+
+paymentRouter.post("/payment/verify", auth, async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+      req.body;
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+
+    // HMAC generate karke verify karo
+    const generated_signature = crypto
+      .createHmac("sha256", secret)
+      .update(razorpay_order_id + "|" + razorpay_payment_id)
+      .digest("hex");
+
+    if (generated_signature === razorpay_signature) {
+      // User ko Premium karo
+      await User.findByIdAndUpdate(req.user._id, { isPremium: true });
+
+      // Payment record update karo
+      await Payment.findOneAndUpdate(
+        { orderId: razorpay_order_id },
+        {
+          status: "captured",
+          paymentId: razorpay_payment_id,
+          signature: razorpay_signature,
+        }
+      );
+
+      return res.json({ success: true, message: "Payment verified" });
+    } else {
+      return res
+        .status(400)
+        .json({ success: false, msg: "Signature mismatch" });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

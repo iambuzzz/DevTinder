@@ -19,7 +19,19 @@ const PremiumPage = () => {
       description: "Unlock unlimited matches",
       order_id: order.id,
       handler: async (response) => {
-        console.log(response);
+        try {
+          const verifyRes = await axios.post(
+            BASE_URL + "payment/verify", // Naya verify route call karo
+            response,
+            { withCredentials: true }
+          );
+          if (verifyRes.data.success) {
+            alert("Mubarak ho! Aap Premium member hain.");
+            window.location.href = "/";
+          }
+        } catch (err) {
+          console.error("Verification failed", err);
+        }
       },
       prefill: { name: order.notes.firstName + " " + order.notes.lastName },
       theme: { color: "#6366f1" },
