@@ -12,6 +12,7 @@ import RequestsFeed from "./components/RequestsFeed";
 import UserChats from "./components/UserChats";
 import PrivacyPolicy from "./components/PrivacyPolicy";
 import TermsAndConditions from "./components/TermsAndConditions";
+import PremiumPage from "./components/PremiumPage";
 import ContactUs from "./components/ContactUs";
 import { Provider } from "react-redux";
 import { appStore } from "./utils/appStore";
@@ -32,6 +33,7 @@ function App() {
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/contactus" element={<ContactUs />} />
+            <Route path="/premium" element={<PremiumPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

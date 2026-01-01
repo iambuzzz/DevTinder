@@ -165,6 +165,17 @@ const Navbar = () => {
                       </li>
                       <li>
                         <a
+                          className="text-sm"
+                          onClick={() => {
+                            document.activeElement.blur();
+                            navigate("/premium");
+                          }}
+                        >
+                          Premium
+                        </a>
+                      </li>
+                      <li>
+                        <a
                           onClick={() => {
                             logout();
                             document.activeElement.blur();
