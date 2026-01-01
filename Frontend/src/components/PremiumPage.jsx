@@ -4,8 +4,12 @@ import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux"; // Redux se user check karne ke liye
-
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
 const PremiumPage = () => {
+  const [showToast, setShowToast] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const user = useSelector((store) => store.user); // Aapka user state
   const isPremium = user?.isPremium;
@@ -34,8 +38,8 @@ const PremiumPage = () => {
               { withCredentials: true }
             );
             if (verifyRes.data.success) {
-              alert("Mubarak ho! Aap Premium member hain.");
-              window.location.reload(); // State refresh karne ke liye
+              // Direct reload karo ek success flag ke saath
+              window.location.href = "/premium?paymentsuccess=true";
             }
           } catch (err) {
             console.error("Verification failed", err);
@@ -51,6 +55,20 @@ const PremiumPage = () => {
       console.error("Payment initiation failed", error);
     }
   };
+  useEffect(() => {
+    // Agar URL mein ?paymentsuccess=true hai
+    if (searchParams.get("paymentsuccess") === "true") {
+      setShowToast(true);
+
+      // 5 second baad toast hatao aur URL clean kar do
+      const timer = setTimeout(() => {
+        setShowToast(false);
+        setSearchParams({}); // URL se query hata dega (?paymentsuccess=true gayab)
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-[#020617] relative overflow-y-auto overflow-x-hidden flex items-center justify-center py-20 px-6">
@@ -170,6 +188,48 @@ const PremiumPage = () => {
           </p>
         </div>
       </motion.div>
+      {showToast && (
+        <div className="toast toast-top toast-center z-[100]">
+          <div className="alert border border-indigo-500 bg-slate-900 shadow-2xl rounded-2xl p-4 min-w-[350px]">
+            <div className="flex items-center gap-4">
+              {/* Animated Crown Icon */}
+              <div className="bg-indigo-600 p-2 rounded-xl animate-bounce">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"
+                  />
+                </svg>
+              </div>
+
+              <div className="flex flex-col items-start">
+                <span className="text-white font-bold text-lg">
+                  Mubarak ho! 🎉
+                </span>
+                <span className="text-indigo-300 text-sm">
+                  Aap DevTinder{" "}
+                  <span className="font-extrabold text-white">Gold</span> member
+                  ban gaye hain.
+                </span>
+              </div>
+            </div>
+
+            {/* Progress bar animation (optional) */}
+            <div
+              className="absolute bottom-0 left-0 h-1 bg-indigo-500 animate-[progress_4s_linear]"
+              style={{ width: "100%" }}
+            ></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
