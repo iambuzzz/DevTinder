@@ -51,8 +51,8 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
   try {
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
     const isWebhookValid = validateWebhookSignature(
-      JSON.stringify(req.body),
-      req.headers["x-razorpay-signature"],
+      req.body,
+      req.headers("x-razorpay-signature"),
       webhookSecret
     );
     if (!isWebhookValid) {
@@ -66,7 +66,7 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
     const payment = await Payment.findOne({ orderId: paymentData.order_id });
     payment.status = paymentData.status;
     payment.paymentId = paymentData.id;
-    payment.signature = req.headers["x-razorpay-signature"];
+    payment.signature = req.headers("x-razorpay-signature");
     const updatedPayment = await payment.save();
 
     const user = await User.findById(payment.userId);
