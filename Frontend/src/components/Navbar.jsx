@@ -118,9 +118,13 @@ const Navbar = () => {
                     <div
                       tabIndex={0}
                       role="button"
-                      className="btn btn-ghost btn-circle avatar ring-2 ring-white/50 ring-offset-0"
+                      className={`btn btn-ghost btn-circle avatar flex items-center justify-center ${
+                        user.isPremium
+                          ? "btn btn-ghost btn-circle avatar  border-2 border-indigo-500 p-0.5"
+                          : "ring-2 ring-white/50"
+                      }`}
                     >
-                      <div className="w-8 rounded-full">
+                      <div className="w-9 rounded-full object-cover">
                         <img
                           alt="User profile"
                           src={
@@ -139,9 +143,37 @@ const Navbar = () => {
                         <p className="uppercase tracking-wider text-gray-500">
                           Signed in as
                         </p>
-                        <p className="font-bold truncate text-white text-sm">
-                          {user.firstName} {user.lastName}
-                        </p>
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <p className="font-bold truncate text-white text-sm">
+                            {user.firstName} {user.lastName}
+                          </p>
+
+                          {user.isPremium && (
+                            <div className="flex-shrink-0 group relative cursor-help">
+                              {/* Premium Crown Icon matching your theme */}
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="w-4 h-4 text-purple-500 fill-purple-500/20 drop-shadow-[0_0_8px_rgba(99,102,241,0.6)] animate-pulse"
+                              >
+                                <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
+                              </svg>
+
+                              {/* Glow effect behind the icon */}
+                              {/* <div className="absolute inset-0 bg-purple-500/20 blur-md rounded-full -z-10"></div> */}
+
+                              {/* Tooltip */}
+                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-slate-900 border border-purple-500/50 text-[10px] text-indigo-300 px-2 py-1 rounded shadow-2xl z-50 whitespace-nowrap">
+                                DevTinder Gold Member
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </li>
                       <li>
                         <Link

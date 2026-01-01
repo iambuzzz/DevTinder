@@ -2,79 +2,122 @@ import React from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux"; // Redux se user check karne ke liye
+
 const PremiumPage = () => {
+  const navigate = useNavigate();
+  const user = useSelector((store) => store.user); // Aapka user state
+  const isPremium = user?.isPremium;
+
   const handlePayment = async () => {
-    const { data } = await axios.post(
-      BASE_URL + "payment/create",
-      {},
-      { withCredentials: true }
-    );
-    const { order } = data;
+    try {
+      const { data } = await axios.post(
+        BASE_URL + "payment/create",
+        {},
+        { withCredentials: true }
+      );
+      const { order } = data;
 
-    const options = {
-      key: data.keyId,
-      amount: order.amount,
-      currency: order.currency,
-      name: "DevTinder Premium",
-      description: "Unlock unlimited matches",
-      order_id: order.id,
-      handler: async (response) => {
-        try {
-          const verifyRes = await axios.post(
-            BASE_URL + "payment/verify", // Naya verify route call karo
-            response,
-            { withCredentials: true }
-          );
-          if (verifyRes.data.success) {
-            alert("Mubarak ho! Aap Premium member hain.");
-            window.location.href = "/";
+      const options = {
+        key: data.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        name: "DevTinder Premium",
+        description: "Unlock unlimited matches",
+        order_id: order.id,
+        handler: async (response) => {
+          try {
+            const verifyRes = await axios.post(
+              BASE_URL + "payment/verify",
+              response,
+              { withCredentials: true }
+            );
+            if (verifyRes.data.success) {
+              alert("Mubarak ho! Aap Premium member hain.");
+              window.location.reload(); // State refresh karne ke liye
+            }
+          } catch (err) {
+            console.error("Verification failed", err);
           }
-        } catch (err) {
-          console.error("Verification failed", err);
-        }
-      },
-      prefill: { name: order.notes.firstName + " " + order.notes.lastName },
-      theme: { color: "#6366f1" },
-    };
+        },
+        prefill: { name: user.firstName + " " + user.lastName },
+        theme: { color: "#6366f1" },
+      };
 
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error("Payment initiation failed", error);
+    }
   };
 
   return (
-    // FIX 1: overflow-y-auto enables scrolling, overflow-x-hidden prevents side-scroll
     <div className="min-h-screen bg-[#020617] relative overflow-y-auto overflow-x-hidden flex items-center justify-center py-20 px-6">
-      {/* FIX 2: Glows should be absolute but NOT wrap the content */}
+      {/* Background Glows */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/20 blur-[120px] rounded-full"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/20 blur-[120px] rounded-full"></div>
       </div>
 
-      {/* FIX 3: Removed relative wrapper that was breaking scroll */}
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="z-10 max-w-md w-full my-auto" // Added z-10 and my-auto
+        className="z-10 max-w-md w-full my-auto"
       >
-        {/* Glassmorphism Card */}
-        <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-10 shadow-2xl text-center">
+        <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-10 shadow-2xl text-center relative overflow-hidden">
+          {/* Top Badge for Premium Users */}
+          {isPremium && (
+            <div className="absolute top-0 right-1 bg-indigo-500 text-white text-[10px] font-bold px-4 py-1 rounded-bl-2xl uppercase tracking-widest shadow-lg">
+              Active
+            </div>
+          )}
+
           <motion.div
-            animate={{ rotateY: [0, 10, 0], y: [0, -10, 0] }}
+            animate={
+              isPremium
+                ? { scale: [1, 1.05, 1], rotate: [0, 5, -5, 0] }
+                : { rotateY: [0, 10, 0], y: [0, -10, 0] }
+            }
             transition={{ repeat: Infinity, duration: 4 }}
-            className="w-24 h-24 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-3xl mx-auto mb-8 flex items-center justify-center shadow-[0_0_50px_rgba(99,102,241,0.5)]"
+            className={`w-24 h-24 rounded-3xl mx-auto mb-8 flex items-center justify-center shadow-[0_0_50px_rgba(99,102,241,0.5)] ${
+              isPremium
+                ? "bg-gradient-to-tr from-yellow-400 via-orange-500 to-indigo-600"
+                : "bg-gradient-to-tr from-indigo-500 to-purple-500"
+            }`}
           >
-            <span className="text-4xl text-white font-bold italic">DT</span>
+            {isPremium ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="white"
+                className="w-12 h-12"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+                />
+              </svg>
+            ) : (
+              <span className="text-4xl text-white font-bold italic">DT</span>
+            )}
           </motion.div>
 
-          <h1 className="text-4xl font-extrabold text-white mb-2 tracking-tight leading-tight">
-            DevTinder{" "}
+          <h1 className="text-4xl font-extrabold text-white mb-2 tracking-tight">
+            {isPremium ? "Member " : "DevTinder "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
-              Gold
+              {isPremium ? "Gold" : "Gold"}
             </span>
           </h1>
+
           <p className="text-slate-400 mb-8 text-lg leading-relaxed">
-            Unleash the full potential of developer networking.
+            {isPremium
+              ? `Welcome back, ${user?.firstName}! Your premium features are active.`
+              : "Unleash the full potential of developer networking."}
           </p>
 
           <div className="space-y-4 mb-10 text-left">
@@ -84,36 +127,46 @@ const PremiumPage = () => {
               "Direct Message",
               "Priority Support",
             ].map((feature, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 + i * 0.1 }}
-                className="flex items-center text-slate-300"
-              >
-                <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center mr-3 flex-shrink-0">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+              <div key={i} className="flex items-center text-slate-300">
+                <div className="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center mr-3 flex-shrink-0">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="w-3 h-3 text-indigo-400"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
                 </div>
                 <span className="text-sm md:text-base">{feature}</span>
-              </motion.div>
+              </div>
             ))}
           </div>
 
-          <button
-            onClick={handlePayment}
-            className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_15px_30px_rgba(99,102,241,0.3)]"
-          >
-            Upgrade Now - ₹500
-          </button>
+          {isPremium ? (
+            <button
+              onClick={() => navigate("/")}
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-lg hover:bg-slate-700 transition-all shadow-xl"
+            >
+              Back to Home
+            </button>
+          ) : (
+            <button
+              onClick={handlePayment}
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_15px_30px_rgba(99,102,241,0.3)]"
+            >
+              Upgrade Now - ₹500
+            </button>
+          )}
 
           <p className="mt-6 text-[10px] md:text-xs text-slate-500 leading-relaxed italic">
-            Secure payment via Razorpay. By upgrading, you agree to our{" "}
-            <a
-              href="/privacy-policy"
-              className="underline hover:text-indigo-400"
-            >
-              Privacy Policy
-            </a>
+            {isPremium
+              ? "Thank you for supporting DevTinder!"
+              : "Secure payment via Razorpay. By upgrading, you agree to our Privacy Policy."}
           </p>
         </div>
       </motion.div>

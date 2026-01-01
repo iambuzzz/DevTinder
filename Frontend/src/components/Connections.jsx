@@ -36,11 +36,15 @@ const Connections = () => {
   // Filter Logic: Search by Name
   const filteredConnections = useMemo(() => {
     if (!connections) return [];
-    if (!searchQuery) return connections; // Agar search box khali hai, toh sab dikhao
+
+    // Pehle check karo ki 'item' aur 'item.user' dono exist karte ho
+    const validConnections = connections.filter((item) => item && item.user);
+
+    if (!searchQuery) return validConnections;
 
     const lowerCaseQuery = searchQuery.toLowerCase().trim();
 
-    return connections.filter((item) => {
+    return validConnections.filter((item) => {
       const fullName =
         `${item.user.firstName} ${item.user.lastName}`.toLowerCase();
       return fullName.includes(lowerCaseQuery);
