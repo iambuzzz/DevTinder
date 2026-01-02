@@ -7,6 +7,7 @@ const User = require("../models/user");
 const {
   validateWebhookSignature,
 } = require("razorpay/dist/utils/razorpay-utils");
+
 paymentRouter.post("/payment/create", auth, async (req, res) => {
   try {
     const user = req.user;
@@ -47,55 +48,36 @@ paymentRouter.post("/payment/create", auth, async (req, res) => {
   }
 });
 
-paymentRouter.post("/payment/webhook", async (req, res) => {
+paymentRouter.post("/payment/webhookk", async (req, res) => {
+  // SABSE PEHLE 200 STATUS BHEJO (Razorpay loop rokne ke liye)
+  // Razorpay ko response milte hi wo retry band kar dega
+  res.status(200).send("OK");
+
   try {
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
     const isWebhookValid = validateWebhookSignature(
-      req.body,
+      JSON.stringify(req.body), // Zaroori: req.body ko stringify karke pass karo
       req.headers["x-razorpay-signature"],
       webhookSecret
     );
-    if (!isWebhookValid) {
-      return res.status(400).json({
-        success: false,
-        msg: "Invalid webhook signature",
-      });
+
+    if (!isWebhookValid) return; // Silent exit, 200 pehle hi ja chuka hai
+
+    const { event, payload } = req.body;
+    const paymentData = payload.payment.entity;
+
+    if (event === "payment.captured") {
+      const payment = await Payment.findOne({ orderId: paymentData.order_id });
+      if (payment) {
+        payment.status = "captured";
+        payment.paymentId = paymentData.id;
+        await payment.save();
+
+        await User.findByIdAndUpdate(payment.userId, { isPremium: true });
+      }
     }
-
-    const paymentData = req.body.payload.payment.entity;
-    const payment = await Payment.findOne({ orderId: paymentData.order_id });
-    payment.status = paymentData.status;
-    payment.paymentId = paymentData.id;
-    payment.signature = req.headers["x-razorpay-signature"];
-    const updatedPayment = await payment.save();
-
-    const user = await User.findById(payment.userId);
-    // Update user premium status on successful payment
-    if (paymentData.status === "captured") {
-      user.isPremium = true;
-      await user.save();
-    }
-
-    if (req.body.event === "payment.failed") {
-      return res.status(200).json({
-        success: true,
-        msg: "Payment failed recorded",
-        data: updatedPayment,
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      msg: "Payment verified successfully",
-      data: updatedPayment,
-    });
   } catch (error) {
-    console.error("Payment Verification Error:", error);
-    res.status(500).json({
-      success: false,
-      msg: "Payment verification failed",
-      error: error.message,
-    });
+    console.error("Webhook Background Error:", error.message);
   }
 });
 

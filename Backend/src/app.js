@@ -9,6 +9,7 @@ const auth = require("./middlewares/auth.js");
 require("dotenv").config();
 const cors = require("cors");
 const path = require("path");
+const http = require("http");
 // require("./utils/cronjob");
 // NODE_ENV ke basis par file path decide karo
 const envFile =
@@ -27,11 +28,12 @@ const profileRouter = require("./routes/profileRouter.js");
 const requestRouter = require("./routes/requestRouter.js");
 const userRouter = require("./routes/userRouter.js");
 const paymentRouter = require("./routes/paymentRouter.js");
+const initializeSocket = require("./utils/socket.js");
 
 const start = async () => {
   try {
     await dbConnect();
-    app.listen(3000, () => {
+    server.listen(3000, () => {
       console.log("Server running on port 3000...");
     });
   } catch (err) {
@@ -58,6 +60,9 @@ app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
 app.use("/", paymentRouter);
+
+const server = http.createServer(app);
+initializeSocket(server);
 
 start();
 

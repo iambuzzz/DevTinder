@@ -14,6 +14,7 @@ import PrivacyPolicy from "./components/PrivacyPolicy";
 import TermsAndConditions from "./components/TermsAndConditions";
 import PremiumPage from "./components/PremiumPage";
 import ContactUs from "./components/ContactUs";
+import Chat from "./components/Chat";
 import { Provider } from "react-redux";
 import { appStore } from "./utils/appStore";
 function App() {
@@ -29,7 +30,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/request" element={<RequestsFeed />} />
             <Route path="/connection" element={<Connections />} />
-            <Route path="/chat" element={<UserChats />} />
+            <Route path="/chat/:id" element={<Chat />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/contactus" element={<ContactUs />} />

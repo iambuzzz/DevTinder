@@ -185,7 +185,11 @@ const Connections = () => {
                   {/* Actions Buttons */}
                   <div className="flex gap-3 mt-6">
                     <Link
-                      to={`/chat`} // Chat route (Chat feature jab banaoge tab kaam aayega)
+                      to={`/chat/${user._id}`} // Chat route (Chat feature jab banaoge tab kaam aayega)
+                      state={{
+                        name: `${user.firstName} ${user.lastName}`,
+                        avatar: user.photoURL,
+                      }}
                       className="flex-1 flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white py-2.5 rounded-xl font-semibold transition-all active:scale-95 text-sm"
                     >
                       <svg
