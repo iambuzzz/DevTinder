@@ -10,7 +10,7 @@ import UserCard from "./UserCard"; // Profile dekhne ke liye reuse karenge
 const Connections = () => {
   const connections = useSelector((store) => store.connections);
   const dispatch = useDispatch();
-
+  const onlineList = useSelector((store) => store.chat?.onlineUsers) || [];
   // Local States
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -129,6 +129,7 @@ const Connections = () => {
           >
             {filteredConnections.map((item) => {
               const { user, createdAt } = item;
+              const isOnline = onlineList.includes(user._id.toString());
               return (
                 <motion.div
                   layout // CHANGE 1: Ye prop add karo (Layout smooth karega)
@@ -142,7 +143,7 @@ const Connections = () => {
                 >
                   <div className="flex items-start justify-between">
                     {/* User Info */}
-                    <div className="flex gap-4 w-full">
+                    <div className="flex gap-4 w-full items-center">
                       <div className="relative shrink-0">
                         <img
                           src={
@@ -152,7 +153,13 @@ const Connections = () => {
                           alt={user.firstName}
                           className="w-16 h-16 rounded-full object-cover aspect-square border-2 border-violet-500/50 group-hover:scale-110 transition-all"
                         />
-                        {/* <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-gray-900 rounded-full"></div> */}
+                        <div
+                          className={`absolute bottom-0 right-0 w-4 h-4 border-2 border-gray-900 rounded-full transition-colors ${
+                            isOnline
+                              ? "bg-green-500 shadow-[0_0_8px_#22c55e]"
+                              : "bg-gray-600"
+                          }`}
+                        ></div>
                       </div>
                       <div>
                         <h3 className="text-xl font-bold text-white group-hover:text-violet-300 transition-colors">
@@ -190,7 +197,7 @@ const Connections = () => {
                         name: `${user.firstName} ${user.lastName}`,
                         avatar: user.photoURL,
                       }}
-                      className="flex-1 flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white py-2.5 rounded-xl font-semibold transition-all active:scale-95 text-sm"
+                      className="flex-1 flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 text-white py-2.5 rounded-xl font-semibold transition-all active:scale-95 text-sm"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"

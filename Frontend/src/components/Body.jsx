@@ -6,6 +6,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { BASE_URL } from "../utils/constants";
 import { addUser } from "../utils/userSlice";
 import axios from "axios";
+import createSocketConnection from "../utils/socket";
+import {
+  setOnlineUsers,
+  incrementUnreadCount,
+  setAllUnreadCounts,
+} from "../utils/chatSlice";
 
 const Body = () => {
   const dispatch = useDispatch();
@@ -29,13 +35,51 @@ const Body = () => {
       setLoading(false);
     }
   };
+  const fetchUnreadCounts = async () => {
+    const res = await axios.get(BASE_URL + "unread-counts", {
+      withCredentials: true,
+    });
+    // Redux mein naya action banao 'setAllUnreadCounts'
+    dispatch(setAllUnreadCounts(res.data));
+  };
 
   useEffect(() => {
     if (!userData) {
       fetchUser();
     } else {
       setLoading(false);
+      fetchUnreadCounts();
     }
+  }, [userData]);
+
+  useEffect(() => {
+    if (!userData) return;
+
+    const socket = createSocketConnection();
+    window.socket = socket;
+    const handleMessage = (data) => {
+      const senderId = data.senderId.toString();
+      const isCurrentlyChatting = window.location.pathname.includes(senderId);
+      if (!isCurrentlyChatting) {
+        dispatch(incrementUnreadCount(senderId));
+      }
+    };
+
+    socket.on("msgrecieved", handleMessage);
+
+    socket.on("onlineUsersList", (users) => {
+      dispatch(setOnlineUsers(users));
+    });
+
+    return () => {
+      // socket.off("msgrecieved", handleMessage);
+      // socket.off("onlineUsersList");
+      // // socket.disconnect(); // Isey tabhi karo jab logout ho raha ho
+      if (socket) {
+        socket.disconnect();
+        window.socket = null;
+      }
+    };
   }, [userData]);
 
   // Jab user logout ho aur "/" par click kare (Dev Tinder logo),

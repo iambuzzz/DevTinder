@@ -14,6 +14,8 @@ const Navbar = () => {
   const dispatch = useDispatch();
   const user = useSelector((store) => store.user);
   const request = useSelector((store) => store.requests);
+  const unreadCounts = useSelector((store) => store.chat.unreadCounts) || {};
+  const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
 
   const [notification, setNotification] = useState(0);
   const [showAuthButtons, setShowAuthButtons] = useState(false);
@@ -34,6 +36,9 @@ const Navbar = () => {
       dispatch(clearFeed());
       dispatch(clearRequests());
       dispatch(removeConnection()); // Agar connection slice clear karna ho toh
+      if (window.socket) {
+        window.socket.disconnect();
+      }
       navigate("/home");
     } catch (err) {
       console.error("Logout failed", err);
@@ -60,8 +65,37 @@ const Navbar = () => {
               {user ? (
                 <>
                   {/* Logged In View */}
+                  {/* --- MESSAGE ICON WITH NOTIFICATION --- */}
+                  <button
+                    className="btn btn-ghost btn-circle mr-1 text-white hover:bg-white/20 transition-all"
+                    onClick={() => navigate("/messages")}
+                    title="Messages"
+                  >
+                    <div className="indicator">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                        />
+                      </svg>
+                      {/* Agar aapke paas unread count hai toh yahan dikhao */}
+                      {totalUnread > 0 && (
+                        <span className="badge badge-xs badge-primary indicator-item">
+                          {totalUnread}
+                        </span>
+                      )}
+                    </div>
+                  </button>
 
-                  {/* --- NEW CHANGE: Connections Button Added Here --- */}
+                  {/* ---Connections Button Added Here --- */}
                   <button
                     className="btn btn-ghost btn-circle mr-1 text-white hover:bg-white/20 transition-all"
                     onClick={() => navigate("/connection")}
@@ -189,7 +223,7 @@ const Navbar = () => {
                           className="text-sm"
                           onClick={() => {
                             document.activeElement.blur();
-                            navigate("/chat");
+                            navigate("/messages");
                           }}
                         >
                           Messages

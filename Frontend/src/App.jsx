@@ -9,12 +9,13 @@ import Feed from "./components/Feed";
 import Home from "./components/Home";
 import Connections from "./components/Connections";
 import RequestsFeed from "./components/RequestsFeed";
-import UserChats from "./components/UserChats";
 import PrivacyPolicy from "./components/PrivacyPolicy";
 import TermsAndConditions from "./components/TermsAndConditions";
 import PremiumPage from "./components/PremiumPage";
 import ContactUs from "./components/ContactUs";
 import Chat from "./components/Chat";
+import UserChats from "./components/UserChats";
+
 import { Provider } from "react-redux";
 import { appStore } from "./utils/appStore";
 function App() {
@@ -35,6 +36,7 @@ function App() {
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/contactus" element={<ContactUs />} />
             <Route path="/premium" element={<PremiumPage />} />
+            <Route path="/messages" element={<UserChats />} />
           </Route>
         </Routes>
       </BrowserRouter>

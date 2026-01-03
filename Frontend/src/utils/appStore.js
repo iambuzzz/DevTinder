@@ -3,11 +3,13 @@ import userReducer from "../utils/userSlice";
 import feedReducer from "../utils/feedSlice";
 import requestReducer from "../utils/requestSlice";
 import connectionReducer from "../utils/connectionSlice";
+import chatReducer from "../utils/chatSlice";
 export const appStore = configureStore({
   reducer: {
     user: userReducer,
     feed: feedReducer,
     requests: requestReducer,
     connections: connectionReducer,
+    chat: chatReducer,
   },
 });
