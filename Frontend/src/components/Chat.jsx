@@ -5,6 +5,7 @@ import axios from "axios";
 import createSocketConnection from "../utils/socket";
 import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
+import { BASE_URL } from "../utils/constants";
 
 const Chat = ({ firstName, lastName, photoURL }) => {
   const { id } = useParams();
@@ -20,6 +21,35 @@ const Chat = ({ firstName, lastName, photoURL }) => {
   const [messages, setMessages] = useState([]); // Start with empty for real chat
   const chatBoxRef = useRef(null);
   const socketRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+  const fetchChatMessages = async () => {
+    try {
+      const response = await axios.post(
+        BASE_URL + `chat/${targetId}`,
+        {
+          targetId: targetId,
+        },
+        { withCredentials: true }
+      );
+      if (response.data && response.data.data) {
+        const chatData = response.data.data;
+        const formattedMessages = chatData.messages.map((msg) => ({
+          fromMe: msg.senderId === userId,
+          text: msg.text,
+          time: new Date(msg.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        }));
+        setMessages(formattedMessages);
+      }
+    } catch (err) {
+      console.error("Fetch Chat Messages Error:", err);
+    }
+  };
 
   useEffect(() => {
     if (!userId) return;
@@ -38,6 +68,7 @@ const Chat = ({ firstName, lastName, photoURL }) => {
     socketRef.current = socket;
 
     socket.emit("joinChat", { userId, targetId });
+    fetchChatMessages();
 
     socket.on("msgrecieved", ({ text, senderId }) => {
       setMessages((prev) => [
@@ -61,7 +92,10 @@ const Chat = ({ firstName, lastName, photoURL }) => {
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
     if (chatBoxRef.current) {
-      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+      chatBoxRef.current.scrollTo({
+        top: chatBoxRef.current.scrollHeight,
+        behavior: "smooth", // Ye line magic karegi
+      });
     }
   }, [messages]);
 

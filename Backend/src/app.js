@@ -29,6 +29,7 @@ const requestRouter = require("./routes/requestRouter.js");
 const userRouter = require("./routes/userRouter.js");
 const paymentRouter = require("./routes/paymentRouter.js");
 const initializeSocket = require("./utils/socket.js");
+const chatRouter = require("./routes/chatRouter.js");
 
 const start = async () => {
   try {
@@ -60,6 +61,7 @@ app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
 app.use("/", paymentRouter);
+app.use("/", chatRouter);
 
 const server = http.createServer(app);
 initializeSocket(server);

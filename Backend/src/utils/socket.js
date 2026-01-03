@@ -2,9 +2,11 @@ const socket = require("socket.io");
 const jwt = require("jsonwebtoken");
 const ConnectionRequest = require("../models/connectionRequest");
 const cookie = require("cookie"); // Install: npm install cookie
+const Chat = require("../models/chat");
 
 const initializeSocket = (server) => {
   const io = socket(server, {
+    path: "/socket.io",
     cors: {
       origin: [
         "http://localhost:5173",
@@ -65,10 +67,20 @@ const initializeSocket = (server) => {
     });
 
     // --- 3. SEND MESSAGE (With Room Ownership Check) ---
-    socket.on("sendMessage", ({ targetId, text }) => {
+    socket.on("sendMessage", async ({ targetId, text }) => {
       try {
         const userId = socket.user?.id || socket.user?._id;
         const roomId = [userId, targetId].sort().join("_");
+        let chat = await Chat.findOne({
+          participants: { $all: [userId, targetId] },
+        });
+        if (!chat) {
+          chat = new Chat({ participants: [userId, targetId], messages: [] });
+        }
+        chat.messages.push({ senderId: userId, text: text });
+        await chat.save();
+
+        // Check if user is actually in the room before sending
 
         if ([...socket.rooms].includes(roomId)) {
           io.to(roomId).emit("msgrecieved", {
