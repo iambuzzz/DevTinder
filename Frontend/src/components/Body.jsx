@@ -8,6 +8,7 @@ import { addUser } from "../utils/userSlice";
 import { appendRequest } from "../utils/requestSlice";
 import axios from "axios";
 import getSocket from "../utils/socket";
+import { disconnectSocket } from "../utils/socket";
 import {
   setOnlineUsers,
   incrementUnreadCount,
@@ -60,46 +61,58 @@ const Body = () => {
   }, [location.pathname]);
 
   // Socket listeners wala useEffect (FIXED VERSION)
+  // Body.jsx ka socket useEffect
+
   useEffect(() => {
     if (!userData) return;
 
-    // 1. Singleton socket use karo (getSocket)
+    disconnectSocket();
+
     const socket = getSocket();
     window.socket = socket;
 
-    // 2. Pehle purane listeners hatao taaki duplicate na ho
+    // Listeners cleanup
     socket.off("msgrecieved");
     socket.off("onlineUsersList");
     socket.off("newConnectionRequest");
 
-    // 3. Notification Listener (Hamesha background mein chalega)
+    // 1. Message Listener
     socket.on("msgrecieved", (data) => {
       const senderId = data.senderId.toString();
-
-      // Check karo kya user usi bande ki chat khol ke baitha hai?
       const isCurrentlyChatting = currentPathRef.current.includes(senderId);
-
       if (!isCurrentlyChatting) {
         dispatch(incrementUnreadCount(senderId));
       }
     });
 
-    // 4. Baaki listeners
+    // 2. Online Users Listener
     socket.on("onlineUsersList", (users) => {
       dispatch(setOnlineUsers(users));
     });
 
+    // 3. Request Listener
     socket.on("newConnectionRequest", (data) => {
+      // console.log("🔔 Request Notification Aayi:", data);
       dispatch(appendRequest(data.fromUser));
     });
 
-    // 5. CLEANUP: Yahan socket.disconnect() MAT KARO
-    // Agar yahan disconnect kiya, toh route change hote hi socket band ho jayega
+    // --- CHANGE 4: FAIL-SAFE ONLINE CHECK ---
+    // Agar socket pehle se connected hai, toh abhi maango
+    if (socket.connected) {
+      socket.emit("getOnlineUsers");
+    }
+    // Agar abhi connect ho raha hai, toh connect hone par maango
+    else {
+      socket.on("connect", () => {
+        socket.emit("getOnlineUsers");
+      });
+    }
+
     return () => {
       socket.off("msgrecieved");
       socket.off("onlineUsersList");
       socket.off("newConnectionRequest");
-      // socket.disconnect() ko sirf Logout par rakho
+      socket.off("connect"); // Connect listener bhi hatao
     };
   }, [userData, dispatch]);
 

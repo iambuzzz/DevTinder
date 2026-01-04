@@ -45,30 +45,31 @@ const initializeSocket = (server) => {
   });
 
   io.on("connection", (socket) => {
-    const userId = socket.user.id || socket.user._id;
+    const rawId = socket.user.id || socket.user._id;
+    const userId = rawId.toString();
 
-    // 1. User online aaya: Map mein daalo aur sabko broadcast karo
-    // Pehle purani socket id remove karo (if any)
-    onlineUsers.delete(userId);
-    // Nayi fresh socket id set karo
+    // 1. Map Update
+    onlineUsers.delete(userId); // Safety cleanup
     onlineUsers.set(userId, socket.id);
 
-    // Debugging ke liye log dalo
+    // console.log("✅ User Connected:", userId); // Debugging ke liye on kar sakte ho
+
     io.emit("onlineUsersList", Array.from(onlineUsers.keys()));
 
-    // 2. User disconnect hua: Map se hatao aur sabko broadcast karo
-    socket.on("disconnect", async () => {
-      //Map se hatao
-      onlineUsers.delete(userId);
+    // --- CHANGE 2: LISTENER FOR FRONTEND REQUEST ---
+    socket.on("getOnlineUsers", () => {
+      // Sirf us bande ko list bhejo jisne maangi hai
+      io.to(socket.id).emit("onlineUsersList", Array.from(onlineUsers.keys()));
+    });
 
-      // DB mein Last Seen update karo (Very Important)
+    socket.on("disconnect", async () => {
+      onlineUsers.delete(userId);
+      // DB update same rahega...
       try {
-        // Use your actual user model path
         await User.findByIdAndUpdate(userId, { lastSeen: new Date() });
       } catch (e) {
         console.error("LastSeen Error", e);
       }
-      // Sabko update bhej do
       io.emit("onlineUsersList", Array.from(onlineUsers.keys()));
     });
 

@@ -322,7 +322,7 @@ const Profile = () => {
                   className="w-full bg-black/40 border border-gray-600 text-white p-3 rounded-lg outline-none focus:border-violet-500 transition-all"
                   value={formData.about}
                   onChange={handleChange}
-                  placeholder="ABout"
+                  placeholder="About"
                 />
               </div>
               <div className="form-control">

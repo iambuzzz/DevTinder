@@ -49,15 +49,19 @@ requestRouter.post(
 
       const data = await connectionRequest.save();
       // Connection request save hone ke baad
-      const targetSocketId = global.onlineUsers.get(toUserId);
+      const targetUserIdString = toUserId.toString();
+      const targetSocketId = global.onlineUsers.get(targetUserIdString);
+
+      // Debugging Log (Agar ab bhi issue aaye toh isse check karna)
+      // console.log(`Sending Req to: ${targetUserIdString}, SocketFound: ${targetSocketId}`);
 
       if (targetSocketId) {
-        // global.io ka use karein
         global.io.to(targetSocketId).emit("newConnectionRequest", {
-          fromUser: req.user, // Sender ki info
+          fromUser: req.user,
           message: "New connection request received!",
         });
       }
+
       res.json({
         message: "Connection Request send successfully!",
         data: data,
