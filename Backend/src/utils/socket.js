@@ -133,11 +133,13 @@ const initializeSocket = (server) => {
           const targetSocket = io.sockets.sockets.get(targetSocketId);
 
           // Agar target user room mein NAHI hai, tabhi direct notification bhejo
-          if (targetSocket && !targetSocket.rooms.has(roomId)) {
+          if (targetSocketId) {
+            // Hum room check HATA rahe hain, seedha emit kar rahe hain
+            // Isse Body.jsx hamesha notification receive karega
             io.to(targetSocketId).emit("msgrecieved", {
               text,
               senderId: userId,
-              isNotification: true,
+              isNotification: true, // Frontend Body.jsx isse pehchanega
             });
           }
         }
