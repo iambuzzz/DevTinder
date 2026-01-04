@@ -69,7 +69,7 @@ const Feed = () => {
 
   return (
     <div
-      className="hero min-h-screen"
+      className="hero min-h-screen w-full overflow-hidden" // overflow-hidden added to prevent scroll
       style={{
         backgroundImage:
           "url(https://tinder.com/static/build/8ad4e4299ef5e377d2ef00ba5c94c44c.webp)",
@@ -77,18 +77,19 @@ const Feed = () => {
     >
       <div className="hero-overlay bg-black/70"></div>
 
-      <div className="hero-content text-center p-0 my-20 w-full">
+      {/* Padding aur width ko responsive kiya gaya hai */}
+      <div className="hero-content text-center px-2 my-9 w-full max-w-full">
         <div className="flex flex-col items-center justify-center w-full">
-          {feed.length > 0 ? (
-            <div className="mb-6">
-              <h1 className="text-3xl mx-6 font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 tracking-tighter uppercase italic ">
+          {feed.length > 0 && (
+            <div className="mb-4">
+              <h1 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 tracking-tighter uppercase italic">
                 Find Connections
               </h1>
             </div>
-          ) : (
-            <></>
           )}
-          <div className="relative w-[90%] max-w-[360px] md:max-w-[400px] h-[600px] flex justify-center items-center mt-4">
+
+          {/* CARD CONTAINER: Isse responsive banane ke liye changes */}
+          <div className="relative w-full max-w-[min(90vw,400px)] aspect-[2/3] max-h-[75vh] flex justify-center items-center sm:mt-2 mt-1">
             {feed.length > 0 ? (
               [...feed]
                 .reverse()
@@ -100,13 +101,13 @@ const Feed = () => {
                   />
                 ))
             ) : (
-              <div className="text-center p-10 bg-base-300/50 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl">
-                <div className="text-5xl mb-4">😲</div>
-                <h2 className="text-xl font-bold text-white mb-4">
+              <div className="text-center p-8 bg-base-300/50 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl mx-4">
+                <div className="text-4xl mb-4">😲</div>
+                <h2 className="text-lg font-bold text-white mb-4">
                   No more developers left!
                 </h2>
                 <button
-                  className="btn bg-gradient-to-r from-blue-600 to-purple-600 border-none text-white font-bold px-8 rounded-full hover:scale-105 transition-all"
+                  className="btn btn-sm md:btn-md bg-gradient-to-r from-blue-600 to-purple-600 border-none text-white font-bold px-8 rounded-full hover:scale-105 transition-all"
                   onClick={() => getFeed(1)}
                 >
                   Refresh Feed

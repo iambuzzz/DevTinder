@@ -89,7 +89,7 @@ const Login = () => {
     >
       <div className="hero-overlay bg-black/50"></div>
 
-      <div className="hero-content flex-col w-full">
+      <div className="hero-content flex-col w-full py-20">
         <div className="w-full max-w-md p-8 bg-base-300/50 rounded-xl shadow-2xl border border-white/40 backdrop-blur-sm">
           <h2 className="text-3xl font-extrabold text-white mb-6">Login</h2>
 

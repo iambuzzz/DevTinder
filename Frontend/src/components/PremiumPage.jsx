@@ -87,11 +87,12 @@ const PremiumPage = () => {
   }, [searchParams]);
 
   return (
-    <div className="min-h-screen bg-[#020617] relative overflow-y-auto overflow-x-hidden flex items-center justify-center py-20 px-6">
+    <div className="min-h-screen bg-[#020617] relative overflow-y-auto overflow-x-hidden flex items-center justify-center py-20 px-4 sm:px-6">
       {/* Background Glows */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/20 blur-[120px] rounded-full"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/20 blur-[120px] rounded-full"></div>
+        {/* <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-900 z-0"></div> */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/40 blur-[120px] rounded-full"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/40 blur-[120px] rounded-full"></div>
       </div>
 
       <motion.div
@@ -100,22 +101,19 @@ const PremiumPage = () => {
         transition={{ duration: 0.8 }}
         className="z-10 max-w-md w-full my-auto"
       >
-        <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-10 shadow-2xl text-center relative overflow-hidden">
-          {/* Top Badge for Premium Users */}
+        {/* Responsive Padding: p-6 for mobile, p-10 for desktop */}
+        <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-2xl text-center relative overflow-hidden">
           {isPremium && (
-            <div className="absolute top-0 right-1 bg-indigo-500 text-white text-[10px] font-bold px-4 py-1 rounded-bl-2xl uppercase tracking-widest shadow-lg">
+            <div className="absolute top-0 right-0 bg-indigo-500 text-white text-[10px] font-bold px-4 py-1 rounded-bl-2xl uppercase tracking-widest shadow-lg">
               Active
             </div>
           )}
 
+          {/* Responsive Icon Size & Margin */}
           <motion.div
-            animate={
-              isPremium
-                ? { scale: [1, 1.05, 1], rotate: [0, 5, -5, 0] }
-                : { rotateY: [0, 10, 0], y: [0, -10, 0] }
-            }
+            animate={isPremium ? { scale: [1, 1.05, 1] } : { y: [0, -10, 0] }}
             transition={{ repeat: Infinity, duration: 4 }}
-            className={`w-24 h-24 rounded-3xl mx-auto mb-8 flex items-center justify-center shadow-[0_0_50px_rgba(99,102,241,0.5)] ${
+            className={`w-16 h-16 md:w-24 md:h-24 rounded-2xl md:rounded-3xl mx-auto mb-4 md:mb-8 flex items-center justify-center shadow-[0_0_50px_rgba(99,102,241,0.3)] ${
               isPremium
                 ? "bg-gradient-to-tr from-yellow-400 via-orange-500 to-indigo-600"
                 : "bg-gradient-to-tr from-indigo-500 to-purple-500"
@@ -123,12 +121,11 @@ const PremiumPage = () => {
           >
             {isPremium ? (
               <svg
-                xmlns="http://www.w3.org/2000/svg"
+                className="w-8 h-8 md:w-12 md:h-12"
                 fill="none"
                 viewBox="0 0 24 24"
-                strokeWidth={1.5}
                 stroke="white"
-                className="w-12 h-12"
+                strokeWidth={1.5}
               >
                 <path
                   strokeLinecap="round"
@@ -137,24 +134,28 @@ const PremiumPage = () => {
                 />
               </svg>
             ) : (
-              <span className="text-4xl text-white font-bold italic">DT</span>
+              <span className="text-2xl md:text-4xl text-white font-bold italic">
+                DT
+              </span>
             )}
           </motion.div>
 
-          <h1 className="text-4xl font-extrabold text-white mb-2 tracking-tight">
+          {/* Responsive Text Sizes */}
+          <h1 className="text-2xl md:text-4xl font-extrabold text-white mb-2 tracking-tight">
             {isPremium ? "Member " : "DevTinder "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
-              {isPremium ? "Gold" : "Gold"}
+              Gold
             </span>
           </h1>
 
-          <p className="text-slate-400 mb-8 text-lg leading-relaxed">
+          <p className="text-slate-400 mb-6 md:mb-8 text-sm md:text-lg leading-relaxed px-2">
             {isPremium
               ? `Welcome back, ${user?.firstName}! Your premium features are active.`
               : "Unleash the full potential of developer networking."}
           </p>
 
-          <div className="space-y-4 mb-10 text-left">
+          {/* Feature List: Adjusting gap for mobile */}
+          <div className="space-y-3 md:space-y-4 mb-8 md:mb-10 text-left">
             {[
               "Unlimited Swipe",
               "See who likes you",
@@ -164,7 +165,6 @@ const PremiumPage = () => {
               <div key={i} className="flex items-center text-slate-300">
                 <div className="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center mr-3 flex-shrink-0">
                   <svg
-                    xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
                     className="w-3 h-3 text-indigo-400"
@@ -176,43 +176,36 @@ const PremiumPage = () => {
                     />
                   </svg>
                 </div>
-                <span className="text-sm md:text-base">{feature}</span>
+                <span className="text-xs md:text-base font-medium">
+                  {feature}
+                </span>
               </div>
             ))}
           </div>
 
-          {isPremium ? (
-            <button
-              onClick={() => navigate("/")}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-lg hover:bg-slate-700 transition-all shadow-xl"
-            >
-              Back to Home
-            </button>
-          ) : (
-            <button
-              onClick={handlePayment}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_15px_30px_rgba(99,102,241,0.3)]"
-            >
-              Upgrade Now - ₹500
-            </button>
-          )}
+          <button
+            onClick={isPremium ? () => navigate("/") : handlePayment}
+            className="w-full py-3 md:py-4 rounded-xl md:rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-base md:text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl"
+          >
+            {isPremium ? "Back to Home" : "Upgrade Now - ₹500"}
+          </button>
 
-          <p className="mt-6 text-[10px] md:text-xs text-slate-500 leading-relaxed italic">
+          <p className="mt-4 md:mt-6 text-[10px] md:text-xs text-slate-500 leading-relaxed italic">
             {isPremium
               ? "Thank you for supporting DevTinder!"
-              : "Secure payment via Razorpay. By upgrading, you agree to our Privacy Policy."}
+              : "Secure payment via Razorpay."}
           </p>
         </div>
       </motion.div>
+
+      {/* Toast - Responsive Width */}
       {showToast && (
-        <div className="toast toast-top toast-center z-[100]">
-          <div className="alert border border-indigo-500 bg-slate-900 shadow-2xl rounded-2xl p-4 min-w-[350px]">
+        <div className="toast toast-top toast-center z-[100] w-full px-4 max-w-md">
+          <div className="alert border border-indigo-500 bg-slate-900 shadow-2xl rounded-2xl p-4 w-full">
             <div className="flex items-center gap-4">
-              {/* Animated Crown Icon */}
-              <div className="bg-indigo-600 p-2 rounded-xl animate-bounce">
+              <div className="bg-indigo-600 p-2 rounded-xl shrink-0">
                 <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-white"
+                  className="h-5 w-5 md:h-6 md:w-6 text-white"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -225,24 +218,15 @@ const PremiumPage = () => {
                   />
                 </svg>
               </div>
-
-              <div className="flex flex-col items-start">
-                <span className="text-white font-bold text-lg">
+              <div className="flex flex-col items-start overflow-hidden">
+                <span className="text-white font-bold text-sm md:text-lg">
                   Mubarak ho! 🎉
                 </span>
-                <span className="text-indigo-300 text-sm">
-                  Aap DevTinder{" "}
-                  <span className="font-extrabold text-white">Gold</span> member
-                  ban gaye hain.
+                <span className="text-indigo-300 text-[10px] md:text-sm truncate">
+                  Aap member ban gaye hain.
                 </span>
               </div>
             </div>
-
-            {/* Progress bar animation (optional) */}
-            <div
-              className="absolute bottom-0 left-0 h-1 bg-indigo-500 animate-[progress_4s_linear]"
-              style={{ width: "100%" }}
-            ></div>
           </div>
         </div>
       )}

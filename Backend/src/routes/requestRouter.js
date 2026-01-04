@@ -48,6 +48,16 @@ requestRouter.post(
       });
 
       const data = await connectionRequest.save();
+      // Connection request save hone ke baad
+      const targetSocketId = global.onlineUsers.get(toUserId);
+
+      if (targetSocketId) {
+        // global.io ka use karein
+        global.io.to(targetSocketId).emit("newConnectionRequest", {
+          fromUser: req.user, // Sender ki info
+          message: "New connection request received!",
+        });
+      }
       res.json({
         message: "Connection Request send successfully!",
         data: data,

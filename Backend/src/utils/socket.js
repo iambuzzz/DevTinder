@@ -20,6 +20,8 @@ const initializeSocket = (server) => {
       credentials: true, // Cookies allow karne ke liye zaroori hai
     },
   });
+  global.io = io;
+  global.onlineUsers = onlineUsers;
 
   // --- 1. AUTHENTICATION MIDDLEWARE ---
   // Ye block har connection se pehle JWT verify karega
@@ -157,4 +159,4 @@ const initializeSocket = (server) => {
   });
 };
 
-module.exports = initializeSocket;
+module.exports = { initializeSocket, onlineUsers };

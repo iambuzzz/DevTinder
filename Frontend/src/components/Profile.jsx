@@ -165,23 +165,23 @@ const Profile = () => {
         )}
         {showPreview && (
           <div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-blue-900/40 backdrop-blur-xl animate-in fade-in duration-300"
-            onClick={() => setShowPreview(true)} // Kahin bhi click karne par preview band ho jaye
+            className="fixed inset-0 z-[150] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-300 px-4"
+            // onClick={() => setShowPreview(false)}
           >
+            {/* CARD CONTAINER: Feed wala responsive logic */}
             <div
-              className="relative w-[90%] max-w-[360px] md:max-w-[400px] h-[600px] animate-in zoom-in duration-300"
-              onClick={(e) => e.stopPropagation()} // Card par click karne se band na ho
+              className="relative w-full max-w-[min(90vw,400px)] aspect-[2/3] max-h-[75vh] flex justify-center items-center animate-in zoom-in duration-300"
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* Close Button */}
+              {/* CLOSE BUTTON: Card ke andar top-right mein move kiya */}
               <button
-                className="absolute -top-8 right-0 z-[200] text-white/50 hover:text-white text-lg mr-4 transition-all cursor-pointer"
-                onClick={(e) => {
-                  setShowPreview(false);
-                }}
+                className="absolute top-4 right-4 z-[200] bg-black/40 hover:bg-black/60 backdrop-blur-md text-white/70 hover:text-white w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-lg"
+                onClick={() => setShowPreview(false)}
               >
                 ✕
               </button>
 
+              {/* UserCard component */}
               <UserCard
                 user={getPreviewData()}
                 isTopCard={true}

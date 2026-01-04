@@ -80,7 +80,7 @@ const Connections = () => {
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-600/20 rounded-full blur-[100px]"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-600/20 rounded-full blur-[100px]"></div>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 pt-20 pb-10">
+      <div className="relative z-10 max-w-6xl mx-auto px-4  pt-17 pb-10">
         {/* --- HEADER SECTION --- */}
         <div className="flex md:flex-row flex-col px-1 sm:mx-3 justify-between items-center mb-4 gap-6">
           <div className="text-center md:text-left">
@@ -94,8 +94,8 @@ const Connections = () => {
 
           {/* Search Bar */}
         </div>
-        <div className="relative group mb-8 px-3">
-          <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none z-50">
+        <div className="relative group mb-8 md:mx-3">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-50">
             <svg
               className="w-5 h-5 text-gray-500 group-focus-within:text-violet-500 transition-colors"
               fill="none"
@@ -113,7 +113,7 @@ const Connections = () => {
           <input
             type="text"
             placeholder="Search connections..."
-            className="block w-full pl-10 pr-3 py-3 border border-gray-700 rounded-xl leading-5 bg-gray-900/50 text-gray-300 placeholder-gray-500 focus:outline-none focus:bg-gray-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 sm:text-sm transition-all shadow-lg backdrop-blur-sm"
+            className="block w-full pl-10 pr-3 py-3 border border-gray-700 rounded-xl leading-5 bg-gray-900/50 text-gray-300 placeholder-gray-500 focus:outline-none focus:bg-gray-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 text-sm transition-all shadow-lg backdrop-blur-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -125,7 +125,7 @@ const Connections = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 md:grid-cols-2 md:mx-3 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 md:mx-3 lg:grid-cols-3 gap-6 mb-9"
           >
             {filteredConnections.map((item) => {
               const { user, createdAt } = item;

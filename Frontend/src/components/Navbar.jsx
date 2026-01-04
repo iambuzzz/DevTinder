@@ -6,18 +6,16 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { removeUser } from "../utils/userSlice";
 import { removeFeed, clearFeed } from "../utils/feedSlice";
-import { clearRequests } from "../utils/requestSlice";
 import { removeConnection } from "../utils/connectionSlice"; // Optional: Agar connections clear karne ho logout par
 
 const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const user = useSelector((store) => store.user);
-  const request = useSelector((store) => store.requests);
   const unreadCounts = useSelector((store) => store.chat.unreadCounts) || {};
   const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
-
-  const [notification, setNotification] = useState(0);
+  const requests = useSelector((store) => store.requests);
+  const unreadRequestCount = requests?.length || 0;
   const [showAuthButtons, setShowAuthButtons] = useState(false);
 
   useEffect(() => {
@@ -34,7 +32,6 @@ const Navbar = () => {
       dispatch(removeUser());
       dispatch(removeFeed());
       dispatch(clearFeed());
-      dispatch(clearRequests());
       dispatch(removeConnection()); // Agar connection slice clear karna ho toh
       if (window.socket) {
         window.socket.disconnect();
@@ -59,7 +56,7 @@ const Navbar = () => {
             </span>
           </Link>
         </div>
-        <div className="flex gap-2 items-center min-h-[48px]">
+        <div className="flex sm:gap-2 gap-0 items-center min-h-[48px]">
           {showAuthButtons && (
             <>
               {user ? (
@@ -67,7 +64,7 @@ const Navbar = () => {
                   {/* Logged In View */}
                   {/* --- MESSAGE ICON WITH NOTIFICATION --- */}
                   <button
-                    className="btn btn-ghost btn-circle mr-1 text-white hover:bg-white/20 transition-all"
+                    className="btn btn-ghost btn-circle sm:mr-1 mr-0 text-white hover:bg-white/20 transition-all"
                     onClick={() => navigate("/messages")}
                     title="Messages"
                   >
@@ -97,7 +94,7 @@ const Navbar = () => {
 
                   {/* ---Connections Button Added Here --- */}
                   <button
-                    className="btn btn-ghost btn-circle mr-1 text-white hover:bg-white/20 transition-all"
+                    className="btn btn-ghost btn-circle sm:mr-1 mr-0 text-white hover:bg-white/20 transition-all"
                     onClick={() => navigate("/connection")}
                     title="Connections"
                   >
@@ -120,7 +117,7 @@ const Navbar = () => {
 
                   {/* Request/Notification Button */}
                   <button
-                    className="btn btn-ghost btn-circle mr-2 text-white hover:bg-white/20 transition-all"
+                    className="btn btn-ghost btn-circle sm:mr-3 mr-2 text-white hover:bg-white/20 transition-all"
                     onClick={() => navigate("/request")}
                     title="Requests"
                   >
@@ -139,9 +136,9 @@ const Navbar = () => {
                           d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                         />
                       </svg>
-                      {request && request.length !== 0 && (
+                      {unreadRequestCount > 0 && (
                         <span className="badge badge-xs badge-primary indicator-item">
-                          {request.length}
+                          {unreadRequestCount}
                         </span>
                       )}
                     </div>
@@ -218,17 +215,7 @@ const Navbar = () => {
                           Profile
                         </Link>
                       </li>
-                      <li>
-                        <a
-                          className="text-sm"
-                          onClick={() => {
-                            document.activeElement.blur();
-                            navigate("/messages");
-                          }}
-                        >
-                          Messages
-                        </a>
-                      </li>
+
                       <li>
                         <a
                           className="text-sm"
