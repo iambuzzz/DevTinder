@@ -8,8 +8,8 @@ import { addFeed } from "../utils/feedSlice";
 import { addRequests } from "../utils/requestSlice";
 
 const Login = () => {
-  const [email, setEmail] = useState("vinitajangra@gmail.com");
-  const [password, setPassword] = useState("Vinita@123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [responseErr, setResponseErr] = useState("");
