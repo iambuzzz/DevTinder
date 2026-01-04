@@ -54,7 +54,6 @@ const initializeSocket = (server) => {
     onlineUsers.set(userId, socket.id);
 
     // Debugging ke liye log dalo
-    console.log(`User Connected: ${userId} with SocketID: ${socket.id}`);
     io.emit("onlineUsersList", Array.from(onlineUsers.keys()));
 
     // 2. User disconnect hua: Map se hatao aur sabko broadcast karo
@@ -71,7 +70,6 @@ const initializeSocket = (server) => {
       }
       // Sabko update bhej do
       io.emit("onlineUsersList", Array.from(onlineUsers.keys()));
-      console.log(`User ${userId} offline`);
     });
 
     // --- 3. JOIN CHAT (With DB Check) ---
@@ -87,7 +85,6 @@ const initializeSocket = (server) => {
         if (isConnected) {
           const roomId = [userId, targetId].sort().join("_");
           socket.join(roomId);
-          //   console.log(`Secure room joined: ${roomId}`);
         } else {
           console.log(
             `Access denied: No connection between ${userId} and ${targetId}`
@@ -105,43 +102,27 @@ const initializeSocket = (server) => {
         const userId = (socket.user?.id || socket.user?._id).toString();
         const roomId = [userId, targetId].sort().join("_");
 
-        // 1. DB mein save karo
+        // 1. DB Save logic (same rakho)
         let chat = await Chat.findOne({
           participants: { $all: [userId, targetId] },
         });
-        if (!chat) {
+        if (!chat)
           chat = new Chat({ participants: [userId, targetId], messages: [] });
-        }
         chat.messages.push({ senderId: userId, text: text });
         await chat.save();
 
-        // 2. Sirf RECEIVER ko message bhejo (SENDER ko nahi)
-        // socket.to(roomId) ka matlab: "Mere alawa room mein sabko bhejo"
-        socket.to(roomId).emit("msgrecieved", {
-          text,
-          senderId: userId,
-          time: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        });
-
-        // 3. Notification ke liye:
-        // Hum check karenge ki kya receiver abhi room mein hai?
+        // 2. Sirf ek baar bhejenge!
+        // Hum seedha target ke socket par bhejenge, chahe wo kahin bhi ho.
         const targetSocketId = onlineUsers.get(targetId);
         if (targetSocketId) {
-          const targetSocket = io.sockets.sockets.get(targetSocketId);
-
-          // Agar target user room mein NAHI hai, tabhi direct notification bhejo
-          if (targetSocketId) {
-            // Hum room check HATA rahe hain, seedha emit kar rahe hain
-            // Isse Body.jsx hamesha notification receive karega
-            io.to(targetSocketId).emit("msgrecieved", {
-              text,
-              senderId: userId,
-              isNotification: true, // Frontend Body.jsx isse pehchanega
-            });
-          }
+          io.to(targetSocketId).emit("msgrecieved", {
+            text,
+            senderId: userId,
+            time: new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          });
         }
       } catch (err) {
         console.error("SendMessage Error:", err);

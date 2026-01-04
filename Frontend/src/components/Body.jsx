@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { useDispatch, useSelector } from "react-redux";
 import { BASE_URL } from "../utils/constants";
 import { addUser } from "../utils/userSlice";
+import { appendRequest } from "../utils/requestSlice";
 import axios from "axios";
-import createSocketConnection from "../utils/socket";
+import getSocket from "../utils/socket";
 import {
   setOnlineUsers,
   incrementUnreadCount,
@@ -19,7 +20,7 @@ const Body = () => {
   const location = useLocation();
   const userData = useSelector((store) => store.user);
   const [loading, setLoading] = useState(true);
-
+  const currentPathRef = useRef(location.pathname);
   const fetchUser = async () => {
     try {
       const res = await axios.get(BASE_URL + "profile", {
@@ -43,6 +44,7 @@ const Body = () => {
     dispatch(setAllUnreadCounts(res.data));
   };
 
+  // Pehle unread counts aur user fetch wala useEffect (Waise hi rahega)
   useEffect(() => {
     if (!userData) {
       fetchUser();
@@ -52,35 +54,54 @@ const Body = () => {
     }
   }, [userData]);
 
+  // Path track karne wala (Zaroori hai notification check ke liye)
+  useEffect(() => {
+    currentPathRef.current = location.pathname;
+  }, [location.pathname]);
+
+  // Socket listeners wala useEffect (FIXED VERSION)
   useEffect(() => {
     if (!userData) return;
 
-    const socket = createSocketConnection();
+    // 1. Singleton socket use karo (getSocket)
+    const socket = getSocket();
     window.socket = socket;
-    const handleMessage = (data) => {
+
+    // 2. Pehle purane listeners hatao taaki duplicate na ho
+    socket.off("msgrecieved");
+    socket.off("onlineUsersList");
+    socket.off("newConnectionRequest");
+
+    // 3. Notification Listener (Hamesha background mein chalega)
+    socket.on("msgrecieved", (data) => {
       const senderId = data.senderId.toString();
-      const isCurrentlyChatting = window.location.pathname.includes(senderId);
+
+      // Check karo kya user usi bande ki chat khol ke baitha hai?
+      const isCurrentlyChatting = currentPathRef.current.includes(senderId);
+
       if (!isCurrentlyChatting) {
         dispatch(incrementUnreadCount(senderId));
       }
-    };
+    });
 
-    socket.on("msgrecieved", handleMessage);
-
+    // 4. Baaki listeners
     socket.on("onlineUsersList", (users) => {
       dispatch(setOnlineUsers(users));
     });
 
+    socket.on("newConnectionRequest", (data) => {
+      dispatch(appendRequest(data.fromUser));
+    });
+
+    // 5. CLEANUP: Yahan socket.disconnect() MAT KARO
+    // Agar yahan disconnect kiya, toh route change hote hi socket band ho jayega
     return () => {
-      // socket.off("msgrecieved", handleMessage);
-      // socket.off("onlineUsersList");
-      // // socket.disconnect(); // Isey tabhi karo jab logout ho raha ho
-      if (socket) {
-        socket.disconnect();
-        window.socket = null;
-      }
+      socket.off("msgrecieved");
+      socket.off("onlineUsersList");
+      socket.off("newConnectionRequest");
+      // socket.disconnect() ko sirf Logout par rakho
     };
-  }, [userData]);
+  }, [userData, dispatch]);
 
   // Jab user logout ho aur "/" par click kare (Dev Tinder logo),
   // toh use turant detect karke redirect karein

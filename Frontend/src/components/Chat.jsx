@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-import createSocketConnection from "../utils/socket";
+import getSocket from "../utils/socket";
 import { useSelector, useDispatch } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { BASE_URL } from "../utils/constants";
@@ -79,52 +79,57 @@ const Chat = ({ firstName, lastName, photoURL }) => {
   };
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !targetId) return;
 
-    const socket = createSocketConnection();
+    // 1. Singleton socket uthao (Wahi jo Body.jsx use kar raha hai)
+    const socket = getSocket();
     socketRef.current = socket;
 
-    socket.on("connect", () => {
-      socket.emit("joinChat", { targetId });
-    });
+    // 2. Room join karne ka signal bhejo
+    socket.emit("joinChat", { targetId });
 
-    socket.on("connect_error", (err) => {
-      console.log("Socket Connection Error:", err.message);
-    });
-
-    socketRef.current = socket;
-
-    socket.emit("joinChat", { userId, targetId });
+    // 3. Purani messages fetch karo
     fetchChatMessages();
 
-    socket.on("msgrecieved", ({ text, senderId }) => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          fromMe: senderId === userId,
-          text: text,
-          time: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        },
-      ]);
-    });
-    socket.on("userTyping", ({ senderId, isTyping }) => {
-      if (senderId == targetId) {
-        setIsTargetTyping(isTyping);
-      }
-    });
-
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.off("msgrecieved");
-        socketRef.current.off("userTyping");
-        socketRef.current.off("connect");
-        // socketRef.current.disconnect(); <== Isey mat karna
+    // 4. Message receive karne ka function (Local to this chat)
+    const handleChatMsg = (data) => {
+      // Check karo ki message isi bande ka hai jiski chat khuli hai
+      if (data.senderId.toString() === targetId.toString()) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            fromMe: false, // Kyunki 'msgrecieved' hamesha samne wale ka hota hai
+            text: data.text,
+            time:
+              data.time ||
+              new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+          },
+        ]);
       }
     };
-  }, [userId, targetId]);
+
+    // 5. Typing indicator ka function
+    const handleTyping = ({ senderId, isTyping }) => {
+      if (senderId.toString() === targetId.toString()) {
+        setIsTargetTyping(isTyping);
+      }
+    };
+
+    // Listeners On karo
+    socket.on("msgrecieved", handleChatMsg);
+    socket.on("userTyping", handleTyping);
+
+    // 6. CLEANUP (Bahut important hai!)
+    return () => {
+      // Sirf ye specific functions hatao taaki Body.jsx wala listener chalta rahe
+      socket.off("msgrecieved", handleChatMsg);
+      socket.off("userTyping", handleTyping);
+      // socket.disconnect() bilkul mat karna!
+    };
+  }, [userId, targetId]); // targetId badalne par chat refresh hogi
 
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {

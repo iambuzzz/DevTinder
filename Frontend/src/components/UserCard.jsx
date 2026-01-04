@@ -33,7 +33,6 @@ const UserCard = ({ user, isTopCard, isPreview }) => {
     // API Call: Backend update karo
     axios
       .post(url, {}, { withCredentials: true })
-      .then((res) => console.log(status + " request successful"))
       .catch((err) => console.error("Request failed", err));
   };
 
