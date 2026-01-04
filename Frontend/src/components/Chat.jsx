@@ -236,18 +236,19 @@ const Chat = ({ firstName, lastName, photoURL }) => {
     <div className="min-h-screen w-full bg-black relative overflow-hidden">
       {/* Background Glows */}
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-900 z-0"></div>
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-600/20 rounded-full blur-[100px]"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-600/20 rounded-full blur-[100px]"></div>
+      <div className="absolute top-[-10%] left-[-10%] w-100 h-100 blur-[180px] md:w-170 md:h-120 md:blur-[250px] bg-purple-600/40 rounded-full"></div>
+
+      <div className="absolute bottom-[-10%] right-[-10%] w-156 h-126 bg-blue-600/40 rounded-full blur-[250px]"></div>
 
       <div
-        className="relative z-10 w-full px-4 sm:px-8 pt-20 pb-6 
+        className="relative z-10 w-full px-2 sm:px-8 pt-18 sm:pb-6 pb-3
 flex flex-col h-[100vh] min-h-0"
       >
         {/* --- HEADER SECTION --- */}
         <div className="w-full flex md:flex-row flex-col justify-between items-center gap-6">
           <div className="w-full flex items-center justify-between bg-gray-900/60 border border-white/10 px-4 py-3 rounded-2xl shadow-xl backdrop-blur-md">
             {" "}
-            <div className="flex items-center gap-3 ">
+            <div className="flex items-center gap-2 ">
               {" "}
               <button
                 onClick={() => navigate(-1)} // -1 ka matlab hai "ek step peeche"
@@ -274,7 +275,7 @@ flex flex-col h-[100vh] min-h-0"
                   // className={`w-11 h-11 rounded-full object-cover border-2 transition-all ${
                   //   isOnline ? "border-green-500" : "border-purple-500/50"
                   // }`}
-                  className="w-11 h-11 rounded-full object-cover border-1 transition-all border-purple-500/50"
+                  className="w-11 h-11 rounded-full object-cover border-1 mr-2 transition-all border-purple-500/50"
                 />
                 {/* Dot indicator */}
                 {/* <div
@@ -304,13 +305,26 @@ flex flex-col h-[100vh] min-h-0"
                 )}
               </div>{" "}
             </div>{" "}
-            <div className="text-gray-400"> 🔐</div>{" "}
+            <button className="text-gray-300 hover:text-white py-2 sm:px-2 px-0 rounded-full hover:bg-white/10 transition-all active:scale-95">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-6 h-6"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10.5 6a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm0 6a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm0 6a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
           </div>
         </div>
+        {/* Chat Message List Area */}
         <div
           ref={chatBoxRef}
-          className="flex-1 min-h-0 overflow-y-auto mt-3 
-  p-4 rounded-2xl bg-gray-900/40 border border-white/10 shadow-xl"
+          className="flex-1 min-h-0 overflow-y-auto mt-3 p-4 rounded-2xl bg-gray-900/20 border border-white/5 shadow-inner custom-scrollbar"
         >
           <AnimatePresence>
             {messages.map((msg, idx) => (
@@ -320,27 +334,57 @@ flex flex-col h-[100vh] min-h-0"
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.18 }}
-                className={`w-full mb-3 last:mb-0 flex ${
+                className={`w-full mb-2 flex ${
                   msg.fromMe ? "justify-end" : "justify-start"
                 }`}
               >
                 <div
-                  className={`max-w-[65%] px-4 py-2 text-sm rounded-2xl border shadow-md ${
+                  className={`relative max-w-[85%] md:max-w-[65%] px-3 py-1.5 text-sm shadow-[0_4px_10px_rgba(0,0,0,0.1)] break-words backdrop-blur-md border ${
                     msg.fromMe
-                      ? "bg-indigo-600 text-white border-indigo-400 shadow-violet-500/20"
-                      : "bg-gray-800 text-gray-200 border-gray-600"
+                      ? // Sender (Me): Indigo Tinted Glass
+                        "bg-indigo-500/30 border-indigo-500/30 text-white rounded-l-lg rounded-br-lg rounded-tr-none"
+                      : // Receiver (Them): White/Gray Tinted Glass
+                        "bg-white/10 border-white/10 text-gray-100 rounded-r-lg rounded-bl-lg rounded-tl-none"
                   }`}
                 >
-                  <p>{msg.text}</p>
-                  <p className="text-[10px] text-gray-300 mt-1 text-right">
-                    {msg.time}
-                  </p>
+                  {/* Message Text */}
+                  <span className="whitespace-pre-wrap leading-relaxed tracking-wide text-[15px] drop-shadow-sm">
+                    {msg.text}
+                  </span>
+
+                  {/* Time & Ticks Container */}
+                  <div className="float-right ml-3 mt-2 flex items-center space-x-1 select-none opacity-80">
+                    <span className="text-[10px] text-white/70 leading-none font-medium">
+                      {msg.time}
+                    </span>
+
+                    {/* Blue Ticks Logic */}
+                    {msg.fromMe && (
+                      <span className="text-blue-300 drop-shadow-[0_0_2px_rgba(59,130,246,0.5)]">
+                        <svg
+                          viewBox="0 0 16 11"
+                          height="10"
+                          width="10"
+                          preserveAspectRatio="xMidYMid meet"
+                          version="1.1"
+                        >
+                          <path
+                            fill="currentColor"
+                            d="M11.55,0.45l-7.22,7.22L1.68,5.03c-0.29-0.29-0.77-0.29-1.06,0l-0.47,0.47c-0.29,0.29-0.29,0.77,0,1.06 l3.72,3.72c0.29,0.29,0.77,0.29,1.06,0l8.15-8.15c0.29-0.29,0.29-0.77,0-1.06L12.61,0.45C12.32,0.16,11.84,0.16,11.55,0.45z"
+                          ></path>
+                          <path
+                            fill="currentColor"
+                            d="M15.85,0.45l-7.22,7.22l-0.34-0.34c-0.29-0.29-0.77-0.29-1.06,0l-0.47,0.47c-0.29,0.29-0.29,0.77,0,1.06 l1.41,1.41c0.29,0.29,0.77,0.29,1.06,0l7.09-7.09c0.29-0.29,0.29-0.77,0-1.06L15.85,0.45z"
+                          ></path>
+                        </svg>
+                      </span>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ))}
           </AnimatePresence>
         </div>
-
         <div className="mt-3 flex gap-3 items-center bg-gray-900/60 border border-white/10 rounded-2xl px-4 py-3 shadow-xl backdrop-blur-md">
           <input
             className="flex-1 bg-transparent outline-none text-white placeholder-gray-400"
