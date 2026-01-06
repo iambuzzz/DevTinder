@@ -219,6 +219,25 @@ const Chat = ({ firstName, lastName, photoURL }) => {
     }
   }, [targetId, dispatch]);
 
+  // useEffect(() => {
+  //   const handleFocus = () => {
+  //     // Thoda delay taaki keyboard aa jaye, fir top par lock kar do
+  //     setTimeout(() => {
+  //       window.scrollTo(0, 0);
+  //       document.body.scrollTop = 0;
+  //     }, 50);
+  //   };
+
+  //   const inputs = document.querySelectorAll("input");
+  //   inputs.forEach((input) => input.addEventListener("focus", handleFocus));
+
+  //   return () => {
+  //     inputs.forEach((input) =>
+  //       input.removeEventListener("focus", handleFocus)
+  //     );
+  //   };
+  // }, []);
+
   const handleInputChange = (e) => {
     setMessage(e.target.value);
 
@@ -233,7 +252,7 @@ const Chat = ({ firstName, lastName, photoURL }) => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-black relative overflow-hidden">
+    <div className="fixed h-[100dvh] w-full bg-black overflow-hidden">
       {/* Background Glows */}
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-900 z-0"></div>
       <div className="absolute top-[-10%] left-[-10%] w-100 h-100 blur-[180px] md:w-170 md:h-120 md:blur-[250px] bg-purple-600/40 rounded-full"></div>
@@ -242,7 +261,8 @@ const Chat = ({ firstName, lastName, photoURL }) => {
 
       <div
         className="relative z-10 w-full px-2 sm:px-8 pt-18 sm:pb-6 pb-3
-flex flex-col h-[100vh] min-h-0"
+flex flex-col h-dvh min-h-0"
+        style={{ height: "var(--vh, 100dvh)" }}
       >
         {/* --- HEADER SECTION --- */}
         <div className="w-full flex md:flex-row flex-col justify-between items-center gap-6">

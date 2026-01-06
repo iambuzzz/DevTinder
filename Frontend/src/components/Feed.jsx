@@ -69,7 +69,7 @@ const Feed = () => {
 
   return (
     <div
-      className="hero min-h-screen w-full overflow-hidden" // overflow-hidden added to prevent scroll
+      className="hero h-[100dvh] w-full overflow-hidden" // overflow-hidden added to prevent scroll
       style={{
         backgroundImage:
           "url(https://tinder.com/static/build/8ad4e4299ef5e377d2ef00ba5c94c44c.webp)",

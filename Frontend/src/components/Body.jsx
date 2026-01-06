@@ -16,12 +16,15 @@ import {
 } from "../utils/chatSlice";
 
 const Body = () => {
+  // Check karo ki kya hum chat page par hain
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const userData = useSelector((store) => store.user);
   const [loading, setLoading] = useState(true);
   const currentPathRef = useRef(location.pathname);
+  const isChatPage = location.pathname.includes("/chat");
+
   const fetchUser = async () => {
     try {
       const res = await axios.get(BASE_URL + "profile", {
@@ -138,7 +141,7 @@ const Body = () => {
       <main className="flex-grow">
         <Outlet />
       </main>
-      <Footer />
+      {!isChatPage && <Footer />}
     </div>
   );
 };

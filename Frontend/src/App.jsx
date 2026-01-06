@@ -15,13 +15,14 @@ import PremiumPage from "./components/PremiumPage";
 import ContactUs from "./components/ContactUs";
 import Chat from "./components/Chat";
 import UserChats from "./components/UserChats";
-
+import ScrollToTop from "./utils/ScrollToTop";
 import { Provider } from "react-redux";
 import { appStore } from "./utils/appStore";
 function App() {
   return (
     <Provider store={appStore}>
       <BrowserRouter basename="/">
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Body />}>
             <Route path="/" element={<Feed />} />

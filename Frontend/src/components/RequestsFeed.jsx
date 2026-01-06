@@ -55,7 +55,7 @@ const RequestsFeed = () => {
 
   return (
     <div
-      className="hero min-h-screen w-full overflow-hidden" // overflow-hidden added
+      className="hero h-[100dvh] w-full overflow-hidden" // overflow-hidden added
       style={{
         backgroundImage:
           "url(https://tinder.com/static/build/8ad4e4299ef5e377d2ef00ba5c94c44c.webp)",
@@ -64,10 +64,10 @@ const RequestsFeed = () => {
       <div className="hero-overlay bg-black/70"></div>
 
       {/* Padding aur margins ko responsive kiya */}
-      <div className="hero-content text-center px-2 my-9 w-full max-w-full z-10">
+      <div className="hero-content text-center px-2 my-10 w-full max-w-full z-10">
         <div className="flex flex-col items-center justify-center w-full">
           <div className="mb-4">
-            <h1 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 tracking-tighter uppercase italic">
+            <h1 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 tracking-tighter uppercase italic px-3">
               Review Requests
             </h1>
             <div className="badge badge-secondary font-bold px-4 py-3 mt-2 bg-gradient-to-r from-blue-600 to-purple-600 border-none text-white shadow-lg">
