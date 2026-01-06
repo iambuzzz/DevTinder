@@ -82,7 +82,7 @@ const Feed = () => {
         <div className="flex flex-col items-center justify-center w-full">
           {feed.length > 0 && (
             <div className="mb-4">
-              <h1 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 tracking-tighter uppercase italic">
+              <h1 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 tracking-tighter uppercase italic px-2">
                 Find Connections
               </h1>
             </div>
