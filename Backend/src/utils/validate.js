@@ -91,12 +91,12 @@ function validateEditProfileData(req) {
     "gender",
     "mobileNo",
     "skillsOrInterests",
-    "photoURL",
+    // "photoURL",
     "about",
+    "image",
   ];
 
   const requestedFields = Object.keys(req.body);
-
   const isAllowed = requestedFields.every((field) =>
     allowedEdits.includes(field)
   );
@@ -120,8 +120,11 @@ function validateEditProfileData(req) {
     throw new Error("Last name must be between 3-30 characters");
   }
 
-  if (req.body.age && (req.body.age < 16 || req.body.age > 150)) {
-    throw new Error("Age must be between 18 and 150");
+  if (req.body.age) {
+    const ageNum = Number(req.body.age); // Convert "25" -> 25
+    if (isNaN(ageNum) || ageNum < 18 || ageNum > 150) {
+      throw new Error("Age must be between 18 and 150");
+    }
   }
 
   if (
@@ -133,6 +136,7 @@ function validateEditProfileData(req) {
 
   if (
     req.body.mobileNo &&
+    req.body.mobileNo.trim() !== "" &&
     !validator.isMobilePhone(req.body.mobileNo, "en-IN")
   ) {
     throw new Error("Invalid mobile number");
@@ -143,6 +147,18 @@ function validateEditProfileData(req) {
   }
 
   if (req.body.skillsOrInterests) {
+    // 🛠️ FIX START: Agar FormData se String aayi hai, toh use wapas Array bana do
+    if (typeof req.body.skillsOrInterests === "string") {
+      try {
+        req.body.skillsOrInterests = JSON.parse(req.body.skillsOrInterests);
+      } catch (e) {
+        // Agar JSON parse fail ho, toh comma se split kar lo (backup)
+        req.body.skillsOrInterests = req.body.skillsOrInterests.split(",");
+      }
+    }
+    // 🛠️ FIX END
+
+    // 👇 AB TERA PURANA LOGIC (SAME TO SAME)
     if (!Array.isArray(req.body.skillsOrInterests)) {
       throw new Error("Skills must be an array");
     }

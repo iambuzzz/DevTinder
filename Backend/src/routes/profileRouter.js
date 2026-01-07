@@ -5,6 +5,7 @@ const User = require("../models/user.js");
 const profileRouter = express.Router();
 const validator = require("validator");
 const bcrypt = require("bcrypt");
+const { uploadUtils } = require("../utils/cloudinary");
 
 profileRouter.get("/profile", auth, async (req, res) => {
   const user = req.user;
@@ -19,36 +20,63 @@ profileRouter.get("/profile", auth, async (req, res) => {
   }
 });
 
-profileRouter.patch("/profile/edit", auth, async (req, res) => {
-  try {
-    if (!Object.keys(req.body).length) {
-      return res
-        .status(400)
-        .json({ message: "Profile Update failed", error: "Nothing to update" });
-    }
-
-    validateEditProfileData(req);
-
-    const updatedUser = await User.findByIdAndUpdate(req.user._id, req.body, {
-      new: true,
-      runValidators: true,
-    }).select("-password");
-
-    if (!updatedUser) {
-      return res
-        .status(404)
-        .json({ message: "Profile Update failed", error: "User not found" });
-    }
-    res.status(200).json({
-      message: `${updatedUser.firstName} your profile was updated!`,
-      data: updatedUser,
+profileRouter.patch(
+  "/profile/edit",
+  auth,
+  (req, res, next) => {
+    uploadUtils.single("image")(req, res, function (err) {
+      if (err) {
+        return res
+          .status(400)
+          .json({ message: "Image upload failed", error: err.message });
+      }
+      next();
     });
-  } catch (err) {
-    res
-      .status(400)
-      .json({ message: "Profile Update failed", error: err.message });
+  },
+  async (req, res) => {
+    try {
+      if (req.body.image !== undefined) {
+        delete req.body.image;
+      }
+      if (!Object.keys(req.body).length && !req.file) {
+        return res.status(400).json({
+          message: "Profile Update failed",
+          error: "Nothing to update",
+        });
+      }
+
+      validateEditProfileData(req);
+
+      const updateData = { ...req.body };
+      if (req.file) {
+        updateData.photoURL = req.file.path;
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(
+        req.user._id,
+        updateData,
+        {
+          new: true,
+          runValidators: true,
+        }
+      ).select("-password");
+
+      if (!updatedUser) {
+        return res
+          .status(404)
+          .json({ message: "Profile Update failed", error: "User not found" });
+      }
+      res.status(200).json({
+        message: `${updatedUser.firstName} your profile was updated!`,
+        data: updatedUser,
+      });
+    } catch (err) {
+      res
+        .status(400)
+        .json({ message: "Profile Update failed", error: err.message });
+    }
   }
-});
+);
 
 profileRouter.patch("/profile/changepassword", auth, async (req, res) => {
   try {

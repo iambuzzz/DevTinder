@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../utils/constants";
 import validator from "validator";
 import { useState } from "react";
+
 const Profile = () => {
   const user = useSelector((store) => store.user);
   const dispatch = useDispatch();
@@ -15,6 +16,9 @@ const Profile = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [pwdData, setPwdData] = useState({ password: "", newPassword: "" });
   const [pwdError, setPwdError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+
   const handleChangePassword = async () => {
     try {
       setPwdError("");
@@ -42,6 +46,18 @@ const Profile = () => {
     skillsOrInterests: user?.skillsOrInterests?.join(", ") || "",
     about: user?.about || "",
   });
+  // Local state mein ek naya field add karo
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(user?.photoURL || "");
+
+  // File change handle karne ka function
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file)); // Yeh turant preview dikhayega
+    }
+  };
 
   const [showPreview, setShowPreview] = useState(false);
   const [error, setError] = useState("");
@@ -54,29 +70,44 @@ const Profile = () => {
   const handleSave = async () => {
     try {
       setError("");
-      // Clean array for backend
-      const updatedData = {
-        ...formData,
-        skillsOrInterests: formData.skillsOrInterests
-          .split(",")
-          .map((s) => s.trim())
-          .filter((s) => s !== ""),
-      };
-      const res = await axios.patch(BASE_URL + "profile/edit", updatedData, {
+      setIsSaving(true);
+      const data = new FormData();
+      data.append("firstName", formData.firstName);
+      data.append("lastName", formData.lastName);
+      data.append("age", formData.age);
+      data.append("gender", formData.gender);
+      data.append("about", formData.about);
+
+      const skillsArray = formData.skillsOrInterests
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s !== "");
+      data.append("skillsOrInterests", JSON.stringify(skillsArray));
+
+      if (selectedFile) {
+        data.append("image", selectedFile);
+      }
+      const res = await axios.patch(BASE_URL + "profile/edit", data, {
         withCredentials: true,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
       dispatch(addUser(res.data.data));
-      alert("Profile Updated!");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 4000);
     } catch (err) {
       setError(err.response?.data?.error || err.message);
+    } finally {
+      setIsSaving(false); // <<< STOP LOADER
+      setSelectedFile(null);
     }
   };
 
-  // Safe Preview Data Generator
   const getPreviewData = () => {
     return {
       ...formData,
-      // Ensure skills is always an array for UserCard .map()
+      photoURL: previewUrl || formData.photoURL, // <<< YEH ADD KARO
       skillsOrInterests: formData.skillsOrInterests
         ? formData.skillsOrInterests
             .split(",")
@@ -85,6 +116,7 @@ const Profile = () => {
         : [],
     };
   };
+
   return (
     <div
       className="min-h-screen w-full flex flex-col items-center py-10 relative"
@@ -93,7 +125,7 @@ const Profile = () => {
           "url(https://tinder.com/static/build/8ad4e4299ef5e377d2ef00ba5c94c44c.webp)",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        backgroundAttachment: "fixed", // YEH ZAROORI HAI: Background wahin rahega, content scroll hoga
+        backgroundAttachment: "fixed",
       }}
     >
       {/* Dark Overlay - isse pura page cover hoga content badhne par bhi */}
@@ -328,17 +360,29 @@ const Profile = () => {
               <div className="form-control">
                 <label className="label w-full pl-1">
                   <span className="label-text font-semibold mb-1 text-gray-300">
-                    PhotoURL
+                    Profile Photo
                   </span>
                 </label>
-                <input
-                  name="photoURL"
-                  type="text"
-                  className="w-full bg-black/40 border border-gray-600 text-white p-3 rounded-lg outline-none focus:border-violet-500 transition-all"
-                  value={formData.photoURL}
-                  onChange={handleChange}
-                  placeholder="PhotoURL"
-                />
+                <div className="flex items-center gap-4">
+                  {/* Preview Image */}
+                  {/* <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="w-16 h-16 rounded-full object-cover border-2 border-violet-500 shadow-lg"
+                  /> */}
+                  {/* Custom Styled Upload Button */}
+                  <label className="flex-1">
+                    <div className="w-full bg-black/40 border border-dashed border-gray-600 text-gray-300 p-3 rounded-lg text-center cursor-pointer hover:border-violet-500 hover:text-white transition-all">
+                      {selectedFile ? selectedFile.name : "Choose New Photo"}
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                </div>
               </div>
 
               <div className="form-control">
@@ -360,10 +404,20 @@ const Profile = () => {
           </div>
 
           <button
-            className="btn btn-primary w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-none text-white font-bold py-3 mt-8 rounded-lg transition-all active:scale-95"
+            className="btn btn-primary w-full bg-gradient-to-r from-blue-600 to-purple-600 
+  hover:from-blue-700 hover:to-purple-700 border-none text-white font-bold py-3 mt-8 
+  rounded-lg transition-all active:scale-95 flex items-center justify-center gap-2"
             onClick={handleSave}
+            disabled={isSaving}
           >
-            Save
+            {isSaving ? (
+              <>
+                <span className="loading loading-spinner loading-sm"></span>
+                Saving...
+              </>
+            ) : (
+              "Save"
+            )}
           </button>
 
           <div className="mt-6 text-center">
@@ -379,6 +433,44 @@ const Profile = () => {
           </div>
         </div>
       </div>
+      {showToast && (
+        <div className="toast toast-top toast-center z-[200] w-full px-4 max-w-md">
+          <div className="alert border border-indigo-500 bg-slate-900 shadow-2xl rounded-2xl p-4 w-full flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="bg-indigo-600 p-2 rounded-xl">
+                <svg
+                  className="h-6 w-6 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+
+              <div>
+                <span className="text-white font-bold text-sm md:text-lg">
+                  Profile Updated 🎉
+                </span>
+                <p className="text-indigo-300 text-xs">
+                  Your profile has been successfully updated.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowToast(false)}
+              className="text-gray-300 hover:text-white hover:bg-white/10 transition-all p-2 rounded-lg"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
