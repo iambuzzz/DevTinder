@@ -68,7 +68,7 @@ const userSchema = new mongoose.Schema(
     about: {
       type: String,
       trim: true,
-      maxlength: 100,
+      maxlength: 200,
       default: "",
     },
     isPremium: {
