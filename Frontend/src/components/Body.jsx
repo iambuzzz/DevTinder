@@ -8,7 +8,7 @@ import { addUser } from "../utils/userSlice";
 import { appendRequest } from "../utils/requestSlice";
 import axios from "axios";
 import getSocket from "../utils/socket";
-import { disconnectSocket } from "../utils/socket";
+// Note: disconnectSocket import toh hai par use hum useEffect me nahi karenge refresh ke liye
 import {
   setOnlineUsers,
   incrementUnreadCount,
@@ -16,7 +16,6 @@ import {
 } from "../utils/chatSlice";
 
 const Body = () => {
-  // Check karo ki kya hum chat page par hain
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,7 +31,6 @@ const Body = () => {
       });
       dispatch(addUser(res.data.data));
     } catch (error) {
-      // Agar user login nahi hai aur wo feed (/) par hai, toh home bhejo
       if (location.pathname === "/") {
         navigate("/home");
       }
@@ -40,15 +38,18 @@ const Body = () => {
       setLoading(false);
     }
   };
+
   const fetchUnreadCounts = async () => {
-    const res = await axios.get(BASE_URL + "unread-counts", {
-      withCredentials: true,
-    });
-    // Redux mein naya action banao 'setAllUnreadCounts'
-    dispatch(setAllUnreadCounts(res.data));
+    try {
+      const res = await axios.get(BASE_URL + "unread-counts", {
+        withCredentials: true,
+      });
+      dispatch(setAllUnreadCounts(res.data));
+    } catch (err) {
+      console.error("Unread count fetch error", err);
+    }
   };
 
-  // Pehle unread counts aur user fetch wala useEffect (Waise hi rahega)
   useEffect(() => {
     if (!userData) {
       fetchUser();
@@ -58,69 +59,62 @@ const Body = () => {
     }
   }, [userData]);
 
-  // Path track karne wala (Zaroori hai notification check ke liye)
   useEffect(() => {
     currentPathRef.current = location.pathname;
   }, [location.pathname]);
 
-  // Socket listeners wala useEffect (FIXED VERSION)
-  // Body.jsx ka socket useEffect
-
   useEffect(() => {
     if (!userData) return;
-
-    disconnectSocket();
 
     const socket = getSocket();
     window.socket = socket;
 
-    // Listeners cleanup
-    socket.off("msgrecieved");
-    socket.off("onlineUsersList");
-    socket.off("newConnectionRequest");
+    // Define Listeners as named functions (Zaroori hai taaki specific remove kar sakein)
 
-    // 1. Message Listener
-    socket.on("msgrecieved", (data) => {
+    const handleMsgReceived = (data) => {
       const senderId = data.senderId.toString();
+      // Check karo agar hum abhi usi chat page par hain
       const isCurrentlyChatting = currentPathRef.current.includes(senderId);
+
+      // Agar chat khuli nahi hai, tabhi count badhao
       if (!isCurrentlyChatting) {
         dispatch(incrementUnreadCount(senderId));
       }
-    });
+    };
 
-    // 2. Online Users Listener
-    socket.on("onlineUsersList", (users) => {
+    const handleOnlineUsers = (users) => {
       dispatch(setOnlineUsers(users));
-    });
+    };
 
-    // 3. Request Listener
-    socket.on("newConnectionRequest", (data) => {
-      // console.log("🔔 Request Notification Aayi:", data);
+    const handleConnectionRequest = (data) => {
       dispatch(appendRequest(data.fromUser));
-    });
+    };
 
-    // --- CHANGE 4: FAIL-SAFE ONLINE CHECK ---
-    // Agar socket pehle se connected hai, toh abhi maango
+    // Listeners attach karo
+    socket.on("msgrecieved", handleMsgReceived);
+    socket.on("onlineUsersList", handleOnlineUsers);
+    socket.on("newConnectionRequest", handleConnectionRequest);
+
+    // Online Check Logic
     if (socket.connected) {
       socket.emit("getOnlineUsers");
-    }
-    // Agar abhi connect ho raha hai, toh connect hone par maango
-    else {
+    } else {
       socket.on("connect", () => {
         socket.emit("getOnlineUsers");
       });
     }
 
+    // CLEANUP FUNCTION (Ab ye safe hai)
     return () => {
-      socket.off("msgrecieved");
-      socket.off("onlineUsersList");
-      socket.off("newConnectionRequest");
-      socket.off("connect"); // Connect listener bhi hatao
+      // Hum sirf apne function pass kar rahe hain, toh Chat.jsx wala listener delete nahi hoga!
+      socket.off("msgrecieved", handleMsgReceived);
+      socket.off("onlineUsersList", handleOnlineUsers);
+      socket.off("newConnectionRequest", handleConnectionRequest);
+      socket.off("connect");
     };
   }, [userData, dispatch]);
 
-  // Jab user logout ho aur "/" par click kare (Dev Tinder logo),
-  // toh use turant detect karke redirect karein
+  // Logout check logic
   useEffect(() => {
     if (!loading && !userData && location.pathname === "/") {
       navigate("/home");

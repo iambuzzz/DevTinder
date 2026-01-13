@@ -11,11 +11,13 @@ const Feed = () => {
   const dispatch = useDispatch();
   const [page, setPage] = useState(1);
   const [isFetching, setIsFetching] = useState(false);
-
+  const [hasMore, setHasMore] = useState(true);
   const getFeed = async (pageNumber) => {
-    // CHANGE 2: Security Check
-    // Agar user nahi hai, toh API call mat karo (Logout fix)
-    if (isFetching || !user) return;
+    // Safety Checks:
+    // 1. Agar request chal rahi hai (isFetching) -> Ruk jao
+    // 2. Agar DB mein data khatam ho gaya (hasMore false) -> Ruk jao
+    // 3. Agar User logged out hai -> Ruk jao
+    if (isFetching || !hasMore || !user) return;
 
     setIsFetching(true);
     try {
@@ -23,10 +25,16 @@ const Feed = () => {
         `${BASE_URL}feed?page=${pageNumber}&limit=10`,
         { withCredentials: true }
       );
-      dispatch(addFeed(res.data.data || []));
+      const newUsers = res.data.data || [];
+
+      // Agar API se 10 se kam users aaye, iska matlab aage aur users nahi hain
+      if (newUsers.length < 10) {
+        setHasMore(false);
+      }
+
+      dispatch(addFeed(newUsers));
     } catch (error) {
       console.error("Feed fetch error:", error);
-      dispatch(addFeed([]));
     } finally {
       setIsFetching(false);
     }
@@ -41,14 +49,21 @@ const Feed = () => {
   }, [feed, user]); // Dependency update ki taaki user change par react kare
 
   useEffect(() => {
-    // Scroll/Pagination Logic
-    if (feed && feed.length === 2 && !isFetching && user) {
-      // Yahan bhi user check
+    // Logic: Agar feed exist karta hai aur 4 se kam cards bache hain
+    if (feed && feed.length <= 4 && !isFetching && hasMore && user) {
       const nextPage = page + 1;
       setPage(nextPage);
       getFeed(nextPage);
     }
-  }, [page, feed, user]); // Added dependencies
+  }, [feed, isFetching, hasMore, user]);
+
+  const handleManualRefresh = () => {
+    // 1. Reset States
+    setPage(1);
+    setHasMore(true);
+    dispatch(addFeed(null));
+    getFeed(1);
+  };
 
   // Agar user null hai (logout state), toh Spinner mat dikhao, seedha null return karo
   // Isse UI blink nahi karega logout ke time
@@ -108,7 +123,7 @@ const Feed = () => {
                 </h2>
                 <button
                   className="btn btn-sm md:btn-md bg-gradient-to-r from-blue-600 to-purple-600 border-none text-white font-bold px-8 rounded-full hover:scale-105 transition-all"
-                  onClick={() => getFeed(1)}
+                  onClick={handleManualRefresh}
                 >
                   Refresh Feed
                 </button>

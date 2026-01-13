@@ -119,6 +119,7 @@ const initializeSocket = (server) => {
           io.to(targetSocketId).emit("msgrecieved", {
             text,
             senderId: userId,
+            seen: false,
             time: new Date().toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",

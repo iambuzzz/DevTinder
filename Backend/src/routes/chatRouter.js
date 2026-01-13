@@ -13,7 +13,7 @@ chatRouter.post("/chat/:id", auth, async (req, res) => {
   try {
     let chat = await Chat.findOne({
       participants: { $all: [userId, targetId] },
-    }).populate("participants", " lastSeen");
+    }).populate("participants", "firstName lastName photoURL lastSeen");
     if (!chat) {
       chat = new Chat({ participants: [userId, targetId], messages: [] });
       await chat.save();
@@ -83,12 +83,13 @@ chatRouter.get("/unread-counts", auth, async (req, res) => {
 });
 
 // backend/routes/chatRouter.js
+
 chatRouter.post("/chat/seen/:targetId", auth, async (req, res) => {
   try {
     const userId = req.user._id;
     const targetId = req.params.targetId;
 
-    // Is chat ke saare messages jo target ne bheje hain, unhe seen: true kar do
+    // 1. Database Update: Target ke messages ko "seen" mark karo
     await Chat.updateOne(
       { participants: { $all: [userId, targetId] } },
       {
@@ -99,8 +100,21 @@ chatRouter.post("/chat/seen/:targetId", auth, async (req, res) => {
       }
     );
 
+    // 2. REAL-TIME NOTIFICATION (The Magic Step ✨)
+    // Hum check karenge ki kya Sender (Target) online hai?
+    // Agar haan, toh usse turant batao ki messages seen ho gaye.
+    // Note: 'global.onlineUsers' tumhare socket.js se aa raha hai
+    const targetSocketId = global.onlineUsers?.get(targetId);
+
+    if (targetSocketId) {
+      global.io.to(targetSocketId).emit("msgSeenUpdate", {
+        viewerId: userId, // Ye ID batayegi ki kisne message dekha
+      });
+    }
+
     res.status(200).json({ message: "Messages marked as seen" });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });

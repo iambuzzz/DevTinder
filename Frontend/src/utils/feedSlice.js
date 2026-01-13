@@ -6,7 +6,7 @@ const feedSlice = createSlice({
   initialState: null,
   reducers: {
     addFeed: (state, action) => {
-      // Agar state null hai (first load), toh seedha payload set karo
+      if (!action.payload) return null;
       if (state === null) return action.payload;
 
       // Agar naya data khali hai, toh purani state hi rehne do

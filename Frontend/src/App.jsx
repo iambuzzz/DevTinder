@@ -16,6 +16,7 @@ import ContactUs from "./components/ContactUs";
 import Chat from "./components/Chat";
 import UserChats from "./components/UserChats";
 import ScrollToTop from "./utils/ScrollToTop";
+import PrivateRoutes from "./components/PrivateRoutes";
 import { Provider } from "react-redux";
 import { appStore } from "./utils/appStore";
 function App() {
@@ -25,19 +26,21 @@ function App() {
         <ScrollToTop />
         <Routes>
           <Route path="/" element={<Body />}>
-            <Route path="/" element={<Feed />} />
-            <Route path="/home" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/request" element={<RequestsFeed />} />
-            <Route path="/connection" element={<Connections />} />
-            <Route path="/chat/:id" element={<Chat />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/contactus" element={<ContactUs />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsAndConditions />} />
-            <Route path="/contactus" element={<ContactUs />} />
-            <Route path="/premium" element={<PremiumPage />} />
-            <Route path="/messages" element={<UserChats />} />
+            <Route element={<PrivateRoutes />}>
+              <Route path="/" element={<Feed />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/request" element={<RequestsFeed />} />
+              <Route path="/connection" element={<Connections />} />
+              <Route path="/chat/:id" element={<Chat />} />
+              <Route path="/messages" element={<UserChats />} />
+              <Route path="/premium" element={<PremiumPage />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>

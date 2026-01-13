@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import getSocket from "../utils/socket";
 import { useSelector, useDispatch } from "react-redux";
-import { useLocation } from "react-router-dom";
 import { BASE_URL } from "../utils/constants";
 import { clearUnreadCount } from "../utils/chatSlice";
 
-const Chat = ({ firstName, lastName, photoURL }) => {
+const Chat = () => {
   const { id } = useParams();
   const targetId = id;
   const user = useSelector((store) => store.user);
@@ -18,18 +17,30 @@ const Chat = ({ firstName, lastName, photoURL }) => {
   const isOnline = onlineList.includes(targetId);
   const navigate = useNavigate();
   const location = useLocation();
-  const userData = location.state || {};
-  const targetName = userData.name || "User";
-  const avatar =
-    userData.avatar || "https://geographyandyou.com/images/user-profile.png";
+
+  // --- STATE ---
+  const [targetProfile, setTargetProfile] = useState({
+    name: location.state?.name || "User",
+    avatar:
+      location.state?.avatar ||
+      "https://geographyandyou.com/images/user-profile.png",
+  });
+
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([]); // Start with empty for real chat
-  const chatBoxRef = useRef(null);
+  const [messages, setMessages] = useState([]);
   const [targetLastSeen, setTargetLastSeen] = useState(null);
   const [isTargetTyping, setIsTargetTyping] = useState(false);
+
+  // --- REFS ---
+  const chatBoxRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const socketRef = useRef(null);
 
+  const scrollContainerStyle = {
+    WebkitOverflowScrolling: "touch",
+    overscrollBehaviorY: "contain",
+  };
+  // --- HELPER FUNCTIONS ---
   const formatLastSeen = (date) => {
     if (!date) return "Offline";
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);
@@ -41,65 +52,97 @@ const Chat = ({ firstName, lastName, photoURL }) => {
     return new Date(date).toLocaleDateString();
   };
 
-  const fetchChatMessages = async () => {
+  // Call 1: Mark Seen (Ye aapki screenshot mein Line 56 wali call hai)
+  const markMessagesAsSeen = async () => {
+    if (!targetId) return;
     try {
-      const response = await axios.post(
-        BASE_URL + `chat/${targetId}`,
-        {
-          targetId: targetId,
-        },
+      await axios.post(
+        BASE_URL + `chat/seen/${targetId}`,
+        {},
         { withCredentials: true }
       );
-      if (response.data && response.data.data) {
-        const chatData = response.data.data;
-
-        // Safe find: Check karo ki p aur p._id dono exist karte hain
-        const tUser = chatData.participants?.find(
-          (p) => p?._id?.toString() === targetId?.toString()
-        );
-
-        if (tUser) {
-          // Agar lastSeen mil jaye toh set karo, varna purana data mat hatao
-          setTargetLastSeen(tUser.lastSeen || null);
-        }
-
-        const formattedMessages = chatData.messages.map((msg) => ({
-          fromMe: msg.senderId === userId,
-          text: msg.text,
-          time: new Date(msg.createdAt).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        }));
-        setMessages(formattedMessages);
-      }
+      dispatch(clearUnreadCount(targetId));
     } catch (err) {
-      console.error("Fetch Chat Messages Error:", err);
+      console.error("Error marking messages as seen:", err);
     }
   };
 
+  // --- MAIN USE EFFECT ---
   useEffect(() => {
     if (!userId || !targetId) return;
 
-    // 1. Singleton socket uthao (Wahi jo Body.jsx use kar raha hai)
+    // AbortController taaki agar jaldi switch karo to purani call cancel ho jaye
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     const socket = getSocket();
     socketRef.current = socket;
-
-    // 2. Room join karne ka signal bhejo
     socket.emit("joinChat", { targetId });
 
-    // 3. Purani messages fetch karo
+    // Call 2: Fetch Messages (Ye aapki screenshot mein Line 71 wali call hai)
+    const fetchChatMessages = async () => {
+      try {
+        const response = await axios.post(
+          BASE_URL + `chat/${targetId}`,
+          { targetId: targetId },
+          { withCredentials: true, signal: signal }
+        );
+
+        if (response.data && response.data.data) {
+          const chatData = response.data.data;
+
+          // --- USER PROFILE FIX ---
+          const tUser = chatData.participants?.find(
+            (p) => p?._id?.toString() === targetId?.toString()
+          );
+
+          if (tUser) {
+            setTargetLastSeen(tUser.lastSeen || null);
+
+            // ✅ Sirf First Name Uthaya
+            const fName = tUser.firstName || "User";
+
+            setTargetProfile({
+              name: fName,
+              avatar:
+                tUser.photoURL ||
+                "https://geographyandyou.com/images/user-profile.png",
+            });
+          }
+
+          const formattedMessages = chatData.messages.map((msg) => ({
+            fromMe: msg.senderId === userId,
+            text: msg.text,
+            seen: msg.seen,
+            time: new Date(msg.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          }));
+          setMessages(formattedMessages);
+
+          // ✅ Messages aate hi Seen mark karo
+          // Agar aapko wo dusri API call rokni hai, toh neeche wali line hata do:
+          markMessagesAsSeen();
+        }
+      } catch (err) {
+        if (!axios.isCancel(err)) {
+          console.error("Fetch Chat Messages Error:", err);
+        }
+      }
+    };
+
     fetchChatMessages();
 
-    // 4. Message receive karne ka function (Local to this chat)
+    // Listeners
     const handleChatMsg = (data) => {
-      // Check karo ki message isi bande ka hai jiski chat khuli hai
       if (data.senderId.toString() === targetId.toString()) {
         setMessages((prev) => [
           ...prev,
           {
-            fromMe: false, // Kyunki 'msgrecieved' hamesha samne wale ka hota hai
+            fromMe: false,
             text: data.text,
+            seen: false,
             time:
               data.time ||
               new Date().toLocaleTimeString([], {
@@ -108,56 +151,61 @@ const Chat = ({ firstName, lastName, photoURL }) => {
               }),
           },
         ]);
+        markMessagesAsSeen();
       }
     };
 
-    // 5. Typing indicator ka function
     const handleTyping = ({ senderId, isTyping }) => {
       if (senderId.toString() === targetId.toString()) {
         setIsTargetTyping(isTyping);
       }
     };
 
-    // Listeners On karo
+    const handleSeenUpdate = ({ viewerId }) => {
+      if (viewerId === targetId) {
+        setMessages((prev) =>
+          prev.map((msg) => (msg.fromMe ? { ...msg, seen: true } : msg))
+        );
+      }
+    };
+
     socket.on("msgrecieved", handleChatMsg);
     socket.on("userTyping", handleTyping);
+    socket.on("msgSeenUpdate", handleSeenUpdate);
 
-    // 6. CLEANUP (Bahut important hai!)
     return () => {
-      // Sirf ye specific functions hatao taaki Body.jsx wala listener chalta rahe
+      controller.abort(); // Cancel previous API
       socket.off("msgrecieved", handleChatMsg);
       socket.off("userTyping", handleTyping);
-      // socket.disconnect() bilkul mat karna!
+      socket.off("msgSeenUpdate", handleSeenUpdate);
     };
-  }, [userId, targetId]); // targetId badalne par chat refresh hogi
+  }, [userId, targetId]);
 
-  // Auto scroll to bottom when new messages arrive
+  // --- SCROLL EFFECT ---
   useEffect(() => {
     if (chatBoxRef.current) {
       chatBoxRef.current.scrollTo({
         top: chatBoxRef.current.scrollHeight,
-        behavior: "smooth", // Ye line magic karegi
+        behavior: "smooth",
       });
     }
   }, [messages]);
 
+  // --- SEND MESSAGE ---
   const sendMsg = () => {
     if (!message.trim() || !socketRef.current) return;
+    const currentMsg = message;
 
-    const currentMsg = message; // Message ko save karlo delete karne se pehle
-
-    // 1. Server ko bhejo (Ye DB mein save karega)
     socketRef.current.emit("sendMessage", {
       userId: userId,
       targetId: targetId,
       text: currentMsg,
     });
 
-    // 2. Apni screen par turant add karo (Optimistic Update)
     setMessages((prev) => [
       ...prev,
       {
-        fromMe: true, // Aapne bheja hai toh hamesha right side dikhega
+        fromMe: true,
         text: currentMsg,
         time: new Date().toLocaleTimeString([], {
           hour: "2-digit",
@@ -165,86 +213,13 @@ const Chat = ({ firstName, lastName, photoURL }) => {
         }),
       },
     ]);
-
     setMessage("");
   };
 
-  useEffect(() => {
-    // Poore page ko smoothly top par le jaane ke liye
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: "smooth",
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!socketRef.current) return;
-
-    socketRef.current.on("userTyping", ({ senderId, isTyping }) => {
-      if (senderId === targetId) {
-        setIsTargetTyping(isTyping);
-      }
-    });
-
-    // Cleanup listener
-    return () => {
-      socketRef.current.off("userTyping");
-    };
-  }, [targetId]);
-  // Chat.jsx
-  useEffect(() => {
-    const markMessagesAsSeen = async () => {
-      try {
-        await axios.post(
-          BASE_URL + `chat/seen/${targetId}`,
-          {},
-          { withCredentials: true }
-        );
-        dispatch(clearUnreadCount(targetId)); // Redux saaf karo
-      } catch (err) {
-        console.error("Error marking messages as seen:", err);
-      }
-    };
-
-    if (targetId) {
-      markMessagesAsSeen();
-    }
-  }, [targetId, messages.length]);
-
-  // Chat.jsx
-  useEffect(() => {
-    if (targetId) {
-      dispatch(clearUnreadCount(targetId));
-    }
-  }, [targetId, dispatch]);
-
-  // useEffect(() => {
-  //   const handleFocus = () => {
-  //     // Thoda delay taaki keyboard aa jaye, fir top par lock kar do
-  //     setTimeout(() => {
-  //       window.scrollTo(0, 0);
-  //       document.body.scrollTop = 0;
-  //     }, 50);
-  //   };
-
-  //   const inputs = document.querySelectorAll("input");
-  //   inputs.forEach((input) => input.addEventListener("focus", handleFocus));
-
-  //   return () => {
-  //     inputs.forEach((input) =>
-  //       input.removeEventListener("focus", handleFocus)
-  //     );
-  //   };
-  // }, []);
-
   const handleInputChange = (e) => {
     setMessage(e.target.value);
-
-    // Socket ko batao ki main type kar raha hoon
     socketRef.current.emit("typing", { targetId, isTyping: true });
 
-    // Agar 1.5 second tak type nahi kiya toh 'stop typing' bhejo
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
       socketRef.current.emit("typing", { targetId, isTyping: false });
@@ -253,25 +228,21 @@ const Chat = ({ firstName, lastName, photoURL }) => {
 
   return (
     <div className="fixed h-[100dvh] w-full bg-black overflow-hidden">
-      {/* Background Glows */}
+      {/* Backgrounds */}
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-900 z-0"></div>
       <div className="absolute top-[-10%] left-[-10%] w-100 h-100 blur-[180px] md:w-170 md:h-120 md:blur-[250px] bg-purple-600/40 rounded-full"></div>
-
       <div className="absolute bottom-[-10%] right-[-10%] w-156 h-126 bg-blue-600/40 rounded-full blur-[250px]"></div>
 
       <div
-        className="relative z-10 w-full px-2 sm:px-8 pt-18 sm:pb-6 pb-3
-flex flex-col h-dvh min-h-0"
+        className="relative z-10 w-full px-2 sm:px-8 pt-18 sm:pb-6 pb-3 flex flex-col h-dvh min-h-0"
         style={{ height: "var(--vh, 100dvh)" }}
       >
-        {/* --- HEADER SECTION --- */}
+        {/* HEADER */}
         <div className="w-full flex md:flex-row flex-col justify-between items-center gap-6">
           <div className="w-full flex items-center justify-between bg-gray-900/60 border border-white/10 px-4 py-3 rounded-2xl shadow-xl backdrop-blur-md">
-            {" "}
             <div className="flex items-center gap-2 ">
-              {" "}
               <button
-                onClick={() => navigate(-1)} // -1 ka matlab hai "ek step peeche"
+                onClick={() => navigate(-1)}
                 className="text-white hover:text-indigo-400 transition-colors mr-1"
               >
                 <svg
@@ -289,25 +260,19 @@ flex flex-col h-dvh min-h-0"
                   />
                 </svg>
               </button>
+
               <div className="relative">
                 <img
-                  src={avatar}
-                  // className={`w-11 h-11 rounded-full object-cover border-2 transition-all ${
-                  //   isOnline ? "border-green-500" : "border-purple-500/50"
-                  // }`}
+                  src={targetProfile.avatar}
                   className="w-11 h-11 rounded-full object-cover border-1 mr-2 transition-all border-purple-500/50"
+                  alt="Profile"
                 />
-                {/* Dot indicator */}
-                {/* <div
-                  className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-black ${
-                    isOnline
-                      ? "bg-green-500 shadow-[0_0_8px_#22c55e]"
-                      : "bg-gray-500"
-                  }`}
-                ></div> */}
               </div>
+
               <div>
-                <h2 className="text-white font-bold text-lg">{targetName}</h2>
+                <h2 className="text-white font-bold text-lg">
+                  {targetProfile.name}
+                </h2>
                 {isTargetTyping ? (
                   <p className="text-green-400 text-[10px] font-bold italic animate-pulse">
                     typing...
@@ -323,8 +288,10 @@ flex flex-col h-dvh min-h-0"
                       : "Offline"}
                   </p>
                 )}
-              </div>{" "}
-            </div>{" "}
+              </div>
+            </div>
+
+            {/* --- 3 DOTS WAPAS AA GAYE --- */}
             <button className="text-gray-300 hover:text-white py-2 sm:px-2 px-0 rounded-full hover:bg-white/10 transition-all active:scale-95">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -339,11 +306,15 @@ flex flex-col h-dvh min-h-0"
                 />
               </svg>
             </button>
+            {/* --------------------------- */}
           </div>
         </div>
-        {/* Chat Message List Area */}
+
+        {/* MESSAGES AREA */}
         <div
           ref={chatBoxRef}
+          // Yahan scrollContainerStyle lagaya hai smooth scroll ke liye
+          style={scrollContainerStyle}
           className="flex-1 min-h-0 overflow-y-auto mt-3 p-4 rounded-2xl bg-gray-900/20 border border-white/5 shadow-inner custom-scrollbar"
         >
           <AnimatePresence>
@@ -359,28 +330,30 @@ flex flex-col h-dvh min-h-0"
                 }`}
               >
                 <div
-                  className={`relative max-w-[85%] md:max-w-[65%] px-3 py-1.5 text-sm shadow-[0_4px_10px_rgba(0,0,0,0.1)] break-words backdrop-blur-md border ${
+                  // FIX: Removed 'backdrop-blur-md'
+                  // ADDED: 'will-change-transform' for GPU performance
+                  // Design: Bilkul wahi purana wala hai
+                  className={`relative max-w-[85%] md:max-w-[65%] px-3 py-1.5 text-sm shadow-[0_4px_10px_rgba(0,0,0,0.1)] break-words border will-change-transform ${
                     msg.fromMe
-                      ? // Sender (Me): Indigo Tinted Glass
-                        "bg-indigo-500/30 border-indigo-500/30 text-white rounded-l-lg rounded-br-lg rounded-tr-none"
-                      : // Receiver (Them): White/Gray Tinted Glass
-                        "bg-white/10 border-white/10 text-gray-100 rounded-r-lg rounded-bl-lg rounded-tl-none"
+                      ? "bg-indigo-500/30 border-indigo-500/30 text-white rounded-l-lg rounded-br-lg rounded-tr-none"
+                      : "bg-white/10 border-white/10 text-gray-100 rounded-r-lg rounded-bl-lg rounded-tl-none"
                   }`}
                 >
-                  {/* Message Text */}
                   <span className="whitespace-pre-wrap leading-relaxed tracking-wide text-[15px] drop-shadow-sm">
                     {msg.text}
                   </span>
-
-                  {/* Time & Ticks Container */}
                   <div className="float-right ml-3 mt-2 flex items-center space-x-1 select-none opacity-80">
                     <span className="text-[10px] text-white/70 leading-none font-medium">
                       {msg.time}
                     </span>
-
-                    {/* Blue Ticks Logic */}
                     {msg.fromMe && (
-                      <span className="text-blue-300 drop-shadow-[0_0_2px_rgba(59,130,246,0.5)]">
+                      <span
+                        className={`transition-colors duration-300 ${
+                          msg.seen
+                            ? "text-blue-300 drop-shadow-[0_0_2px_rgba(59,130,246,0.5)]"
+                            : "text-gray-400"
+                        }`}
+                      >
                         <svg
                           viewBox="0 0 16 11"
                           height="10"
@@ -405,6 +378,7 @@ flex flex-col h-dvh min-h-0"
             ))}
           </AnimatePresence>
         </div>
+        {/* INPUT AREA */}
         <div className="mt-3 flex gap-3 items-center bg-gray-900/60 border border-white/10 rounded-2xl px-4 py-3 shadow-xl backdrop-blur-md">
           <input
             className="flex-1 bg-transparent outline-none text-white placeholder-gray-400"
@@ -413,7 +387,6 @@ flex flex-col h-dvh min-h-0"
             onChange={handleInputChange}
             onKeyDown={(e) => e.key === "Enter" && sendMsg()}
           />
-
           <button
             onClick={sendMsg}
             className="bg-indigo-600 hover:bg-indigo-700 px-6 py-2 rounded-xl text-white font-semibold active:scale-95 transition-all"
@@ -425,4 +398,5 @@ flex flex-col h-dvh min-h-0"
     </div>
   );
 };
+
 export default Chat;
