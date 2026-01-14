@@ -63,7 +63,7 @@ const Body = () => {
           .filter((item) => item && item.fromUserId)
           .map((item) => ({
             ...item.fromUserId,
-            requestId: item._id, // Request ID zaroori hai accept/reject ke liye
+            requestId: item._id,
           }));
 
         // Redux me daal do
@@ -161,6 +161,22 @@ const Body = () => {
       navigate("/home");
     }
   }, [location.pathname, userData, loading]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && userData) {
+        // console.log("App resumed! Fetching latest data...");
+        fetchUnreadCounts();
+        fetchConnectionRequests();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [userData]);
 
   if (loading) {
     return (
