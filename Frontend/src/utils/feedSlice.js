@@ -1,4 +1,3 @@
-// feedSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
 const feedSlice = createSlice({
@@ -6,24 +5,29 @@ const feedSlice = createSlice({
   initialState: null,
   reducers: {
     addFeed: (state, action) => {
-      if (!action.payload) return null;
+      // 1. Agar naya data khali hai aur purana state exist karta hai
+      if (!action.payload) return state;
+
+      // 2. Agar pehli baar data aa raha hai
       if (state === null) return action.payload;
 
-      // Agar naya data khali hai, toh purani state hi rehne do
-      if (action.payload.length === 0) return state;
+      // 3. DUPLICATE REMOVAL LOGIC
+      // Hum naye aane wale users ko check karenge ki wo already state mein to nahi hain?
+      const existingIds = new Set(state.map((user) => user._id));
 
-      // Duplicate check: Sirf wo users lo jo pehle se state mein nahi hain
       const uniqueNewUsers = action.payload.filter(
-        (newUser) => !state.some((oldUser) => oldUser._id === newUser._id)
+        (newUser) => !existingIds.has(newUser._id)
       );
 
+      // Sirf naye unique users ko append karo
       return [...state, ...uniqueNewUsers];
     },
     removeFeed: (state, action) => {
       if (!state) return null;
+      // Array se user hatao (Swipe hone par)
       return state.filter((user) => user._id !== action.payload);
     },
-    clearFeed: () => null, // 👈 ADD THIS
+    clearFeed: () => null, // Logout ya Refresh ke liye
   },
 });
 

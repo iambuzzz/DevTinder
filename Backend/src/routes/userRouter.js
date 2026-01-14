@@ -84,15 +84,15 @@ userRouter.get("/user/connections", auth, async (req, res) => {
   }
 });
 
+// user.js (Backend Route)
+
 userRouter.get("/feed", auth, async (req, res) => {
   try {
     const loggedinUser = req.user;
+    const limit = parseInt(req.query.limit) || 10;
+    const lastUserId = req.query.after; // Frontend se aayega
 
-    const page = parseInt(req.query.page) || 1;
-    let limit = parseInt(req.query.limit) || 10;
-    limit = limit > 50 ? 50 : limit;
-    const skip = (page - 1) * limit;
-
+    // 1. Apne connections aur requests nikalo
     const connectionRequest = await ConnectionRequest.find({
       $or: [{ fromUserId: loggedinUser._id }, { toUserId: loggedinUser._id }],
     }).select("fromUserId toUserId");
@@ -104,23 +104,25 @@ userRouter.get("/feed", auth, async (req, res) => {
       hideUsersFromFeed.add(re.toUserId);
     });
 
-    const users = await User.find({
+    // 2. Query Logic
+    const query = {
       _id: { $nin: Array.from(hideUsersFromFeed) },
-    })
-      .select(
-        "_id firstName lastName age gender photoURL skillsOrInterests about"
-      )
-      .skip(skip)
+    };
+
+    // Agar cursor hai, toh uske aage ka data do
+    if (lastUserId) {
+      query._id = { ...query._id, $gt: lastUserId };
+    }
+
+    const users = await User.find(query)
+      .sort({ _id: 1 }) // Order fix rakhna zaroori hai
       .limit(limit);
 
-    return res
-      .status(200)
-      .json({ message: "Feed updated successfully", data: users });
+    res.json({ data: users });
   } catch (err) {
-    return res
+    res
       .status(400)
-      .json({ message: "Feed updation failed", error: err.message });
+      .json({ message: "Error fetching feed", error: err.message });
   }
 });
-
 module.exports = userRouter;

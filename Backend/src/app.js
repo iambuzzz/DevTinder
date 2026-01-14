@@ -157,426 +157,426 @@ start();
 // });
 
 // api to insert documents in db
-app.post("/insertUsers", async (req, res) => {
-  //   // insertOne() ❌ (LOW LEVEL – AVOID)
-  //   // Code:
-  //   // await User.collection.insertOne({
-  //   //   firstName: "Ambuj",
-  //   //   emailId: "ambuj@gmail.com"
-  //   // });
-  //   // What happens :❌ NO validation❌ NO middleware❌ NO defaults
-  //   // Use when: ✔ Bulk imports , ✔ Seed scripts
-  //   // 🚫 Never use for user signup
-  //   //insertMany()->(BULK INSERT)
-  //   try {
-  //     const pass1 = await bcrypt.hash("Riya@123", 10);
-  //     const pass2 = await bcrypt.hash("Ambuj@123", 10);
-  //     const pass3 = await bcrypt.hash("Bhavya@123", 10);
-  //     const pass4 = await bcrypt.hash("Radhika@123", 10);
-  //     const pass5 = await bcrypt.hash("Bhavna@123", 10);
-  //     const pass6 = await bcrypt.hash("Kavita@123", 10);
-  //     const pass7 = await bcrypt.hash("Isha@123", 10);
-  //     const pass8 = await bcrypt.hash("Yashasvi@123", 10);
-  //     const pass9 = await bcrypt.hash("Renu@123", 10);
-  //     const pass10 = await bcrypt.hash("Vinita@123", 10);
-  //     const result = await User.insertMany([
-  //       {
-  //         firstName: "Riya",
-  //         lastName: "Maurya",
-  //         emailId: "riyamaurya@gmail.com",
-  //         password: pass1,
-  //         age: 22,
-  //         gender: "female",
-  //         mobileNo: "9000000001",
-  //         skillsOrInterests: [
-  //           "upsc",
-  //           "si",
-  //           "socialmedia",
-  //           "beautiful",
-  //           "fashion",
-  //           "hindi",
-  //         ],
-  //       },
-  //       {
-  //         firstName: "Ambuj",
-  //         lastName: "Jaiswal",
-  //         emailId: "ambujjaiswal@gmail.com",
-  //         password: pass2,
-  //         age: 23,
-  //         gender: "male",
-  //         mobileNo: "9000000002",
-  //         skillsOrInterests: [
-  //           "webdevlopment",
-  //           "commpetitiveprogramming",
-  //           "dsa",
-  //           "problemsolving",
-  //           "java",
-  //           "javascript",
-  //           "cricket",
-  //           "sports",
-  //           "singing",
-  //           "beautiful",
-  //         ],
-  //       },
-  //       {
-  //         firstName: "Bhavya",
-  //         lastName: "Jain",
-  //         emailId: "bhavyajain@gmail.com",
-  //         password: pass3,
-  //         age: 21,
-  //         gender: "female",
-  //         mobileNo: "9000000003",
-  //         skillsOrInterests: [
-  //           "buisness",
-  //           "socialmedia",
-  //           "art",
-  //           "decoration",
-  //           "fashion",
-  //           "beautiful",
-  //         ],
-  //       },
-  //       {
-  //         firstName: "Radhika",
-  //         lastName: "Sharma",
-  //         emailId: "radhikasharma@gmail.com",
-  //         password: pass4,
-  //         age: 29,
-  //         gender: "female",
-  //         mobileNo: "9000000004",
-  //         skillsOrInterests: [
-  //           "literature",
-  //           "english",
-  //           "buisness",
-  //           "speaking",
-  //           "teacher",
-  //           "beautiful",
-  //         ],
-  //       },
-  //       {
-  //         firstName: "Bhavna",
-  //         lastName: "Meemroth",
-  //         emailId: "bhavnameemroth@gmail.com",
-  //         password: pass5,
-  //         age: 21,
-  //         gender: "female",
-  //         mobileNo: "9000000005",
-  //         skillsOrInterests: [
-  //           "webdevlopment",
-  //           "cpp",
-  //           "dsa",
-  //           "beautiful",
-  //           "mern",
-  //           "javascript",
-  //           "badminton",
-  //           "sports",
-  //         ],
-  //       },
-  //       {
-  //         firstName: "Kavita",
-  //         lastName: "Singh",
-  //         emailId: "kavita@gmail.com",
-  //         password: pass6,
-  //         age: 23,
-  //         gender: "female",
-  //         mobileNo: "9000000006",
-  //         skillsOrInterests: [
-  //           "english",
-  //           "speaking",
-  //           "beautiful",
-  //           "cute",
-  //           "hot",
-  //           "sexy",
-  //           "dancing",
-  //           "singing",
-  //         ],
-  //       },
-  //       {
-  //         firstName: "Isha",
-  //         lastName: "Tripathi",
-  //         emailId: "ishatripathi@gmail.com",
-  //         password: pass7,
-  //         age: 32,
-  //         gender: "female",
-  //         mobileNo: "9000000007",
-  //         skillsOrInterests: [
-  //           "management",
-  //           "leadership",
-  //           "reading",
-  //           "yoga",
-  //           "traveling",
-  //           "cooking",
-  //         ],
-  //       },
-  //       {
-  //         firstName: "Yashasvi",
-  //         lastName: "Yadav",
-  //         emailId: "yashasviyadav@gmail.com",
-  //         password: pass8,
-  //         age: 21,
-  //         gender: "female",
-  //         mobileNo: "9000000008",
-  //         skillsOrInterests: [
-  //           "python",
-  //           "datascience",
-  //           "machinelearning",
-  //           "swimming",
-  //           "music",
-  //           "coding",
-  //         ],
-  //       },
-  //       {
-  //         firstName: "Renu",
-  //         lastName: "Rawal",
-  //         emailId: "renurawal@gmail.com",
-  //         password: pass9,
-  //         age: 20,
-  //         gender: "female",
-  //         mobileNo: "9000000009",
-  //         skillsOrInterests: [
-  //           "graphicdesign",
-  //           "sketching",
-  //           "photography",
-  //           "creative",
-  //           "editing",
-  //           "movies",
-  //         ],
-  //       },
-  //       {
-  //         firstName: "Vinita",
-  //         lastName: "Jangra",
-  //         emailId: "vinitajangra@gmail.com",
-  //         password: pass10,
-  //         age: 19,
-  //         gender: "female",
-  //         mobileNo: "9000000010",
-  //         skillsOrInterests: [
-  //           "marketing",
-  //           "contentwriting",
-  //           "blogging",
-  //           "socialmedia",
-  //           "fitness",
-  //           "dance",
-  //         ],
-  //       },
-  //     ]);
-  //     console.log("Users inserted successfully:", result.length, "\n", result);
+// app.post("/insertUsers", async (req, res) => {
+//     // insertOne() ❌ (LOW LEVEL – AVOID)
+//     // Code:
+//     // await User.collection.insertOne({
+//     //   firstName: "Ambuj",
+//     //   emailId: "ambuj@gmail.com"
+//     // });
+//     // What happens :❌ NO validation❌ NO middleware❌ NO defaults
+//     // Use when: ✔ Bulk imports , ✔ Seed scripts
+//     // 🚫 Never use for user signup
+//     //insertMany()->(BULK INSERT)
+//     try {
+//       const pass1 = await bcrypt.hash("Riya@123", 10);
+//       const pass2 = await bcrypt.hash("Ambuj@123", 10);
+//       const pass3 = await bcrypt.hash("Bhavya@123", 10);
+//       const pass4 = await bcrypt.hash("Radhika@123", 10);
+//       const pass5 = await bcrypt.hash("Bhavna@123", 10);
+//       const pass6 = await bcrypt.hash("Kavita@123", 10);
+//       const pass7 = await bcrypt.hash("Isha@123", 10);
+//       const pass8 = await bcrypt.hash("Yashasvi@123", 10);
+//       const pass9 = await bcrypt.hash("Renu@123", 10);
+//       const pass10 = await bcrypt.hash("Vinita@123", 10);
+//       const result = await User.insertMany([
+//         {
+//           firstName: "Riya",
+//           lastName: "Maurya",
+//           emailId: "riyamaurya@gmail.com",
+//           password: pass1,
+//           age: 22,
+//           gender: "female",
+//           mobileNo: "9000000001",
+//           skillsOrInterests: [
+//             "upsc",
+//             "si",
+//             "socialmedia",
+//             "beautiful",
+//             "fashion",
+//             "hindi",
+//           ],
+//         },
+//         {
+//           firstName: "Ambuj",
+//           lastName: "Jaiswal",
+//           emailId: "ambujjaiswal@gmail.com",
+//           password: pass2,
+//           age: 23,
+//           gender: "male",
+//           mobileNo: "9000000002",
+//           skillsOrInterests: [
+//             "webdevlopment",
+//             "commpetitiveprogramming",
+//             "dsa",
+//             "problemsolving",
+//             "java",
+//             "javascript",
+//             "cricket",
+//             "sports",
+//             "singing",
+//             "beautiful",
+//           ],
+//         },
+//         {
+//           firstName: "Bhavya",
+//           lastName: "Jain",
+//           emailId: "bhavyajain@gmail.com",
+//           password: pass3,
+//           age: 21,
+//           gender: "female",
+//           mobileNo: "9000000003",
+//           skillsOrInterests: [
+//             "buisness",
+//             "socialmedia",
+//             "art",
+//             "decoration",
+//             "fashion",
+//             "beautiful",
+//           ],
+//         },
+//         {
+//           firstName: "Radhika",
+//           lastName: "Sharma",
+//           emailId: "radhikasharma@gmail.com",
+//           password: pass4,
+//           age: 29,
+//           gender: "female",
+//           mobileNo: "9000000004",
+//           skillsOrInterests: [
+//             "literature",
+//             "english",
+//             "buisness",
+//             "speaking",
+//             "teacher",
+//             "beautiful",
+//           ],
+//         },
+//         {
+//           firstName: "Bhavna",
+//           lastName: "Meemroth",
+//           emailId: "bhavnameemroth@gmail.com",
+//           password: pass5,
+//           age: 21,
+//           gender: "female",
+//           mobileNo: "9000000005",
+//           skillsOrInterests: [
+//             "webdevlopment",
+//             "cpp",
+//             "dsa",
+//             "beautiful",
+//             "mern",
+//             "javascript",
+//             "badminton",
+//             "sports",
+//           ],
+//         },
+//         {
+//           firstName: "Kavita",
+//           lastName: "Singh",
+//           emailId: "kavita@gmail.com",
+//           password: pass6,
+//           age: 23,
+//           gender: "female",
+//           mobileNo: "9000000006",
+//           skillsOrInterests: [
+//             "english",
+//             "speaking",
+//             "beautiful",
+//             "cute",
+//             "hot",
+//             "sexy",
+//             "dancing",
+//             "singing",
+//           ],
+//         },
+//         {
+//           firstName: "Isha",
+//           lastName: "Tripathi",
+//           emailId: "ishatripathi@gmail.com",
+//           password: pass7,
+//           age: 32,
+//           gender: "female",
+//           mobileNo: "9000000007",
+//           skillsOrInterests: [
+//             "management",
+//             "leadership",
+//             "reading",
+//             "yoga",
+//             "traveling",
+//             "cooking",
+//           ],
+//         },
+//         {
+//           firstName: "Yashasvi",
+//           lastName: "Yadav",
+//           emailId: "yashasviyadav@gmail.com",
+//           password: pass8,
+//           age: 21,
+//           gender: "female",
+//           mobileNo: "9000000008",
+//           skillsOrInterests: [
+//             "python",
+//             "datascience",
+//             "machinelearning",
+//             "swimming",
+//             "music",
+//             "coding",
+//           ],
+//         },
+//         {
+//           firstName: "Renu",
+//           lastName: "Rawal",
+//           emailId: "renurawal@gmail.com",
+//           password: pass9,
+//           age: 20,
+//           gender: "female",
+//           mobileNo: "9000000009",
+//           skillsOrInterests: [
+//             "graphicdesign",
+//             "sketching",
+//             "photography",
+//             "creative",
+//             "editing",
+//             "movies",
+//           ],
+//         },
+//         {
+//           firstName: "Vinita",
+//           lastName: "Jangra",
+//           emailId: "vinitajangra@gmail.com",
+//           password: pass10,
+//           age: 19,
+//           gender: "female",
+//           mobileNo: "9000000010",
+//           skillsOrInterests: [
+//             "marketing",
+//             "contentwriting",
+//             "blogging",
+//             "socialmedia",
+//             "fitness",
+//             "dance",
+//           ],
+//         },
+//       ]);
+//       console.log("Users inserted successfully:", result.length, "\n", result);
 
-  //     res.status(201).json({
-  //       message: "Users inserted successfully",
-  //       insertedCount: result.length,
-  //     });
-  //   } catch (err) {
-  //     console.error("InsertMany error:", err.message);
+//       res.status(201).json({
+//         message: "Users inserted successfully",
+//         insertedCount: result.length,
+//       });
+//     } catch (err) {
+//       console.error("InsertMany error:", err.message);
 
-  //     res.status(400).json({
-  //       message: "Failed to insert users",
-  //       error: err.message,
-  //     });
-  //   }
-  try {
-    const commonPass = await bcrypt.hash("Password@123", 10);
+//       res.status(400).json({
+//         message: "Failed to insert users",
+//         error: err.message,
+//       });
+//     }
+//   try {
+//     const commonPass = await bcrypt.hash("Password@123", 10);
 
-    const result = await User.insertMany([
-      {
-        firstName: "Vikram",
-        lastName: "Rathore",
-        emailId: "vikram.cyber@gmail.com",
-        password: commonPass,
-        age: 22,
-        gender: "male",
-        mobileNo: "9876543220",
-        skillsOrInterests: [
-          "Ethical Hacking",
-          "Python",
-          "Linux",
-          "Metasploit",
-          "Cybersecurity",
-          "Networking",
-        ],
-        about:
-          "B.Tech CSE | OSCP Aspirant | CTF Player. I find bugs and secure systems. Deeply interested in penetration testing and network security. Let's connect if you're into InfoSec!",
-      },
-      {
-        firstName: "Kritika",
-        lastName: "Menon",
-        emailId: "kritika.flutter@gmail.com",
-        password: commonPass,
-        age: 21,
-        gender: "female",
-        mobileNo: "9876543221",
-        skillsOrInterests: [
-          "Flutter",
-          "Dart",
-          "Firebase",
-          "App Development",
-          "GetX",
-          "UI/UX",
-        ],
-        about:
-          "Final Year Student | Flutter Developer | Building cross-platform mobile apps with smooth 60fps animations. Published 3 apps on Play Store. Looking for backend devs to collaborate on startup ideas!",
-      },
-      {
-        firstName: "Sameer",
-        lastName: "Azad",
-        emailId: "sameer.oss@gmail.com",
-        password: commonPass,
-        age: 20,
-        gender: "male",
-        mobileNo: "9876543222",
-        skillsOrInterests: [
-          "Git",
-          "GitHub",
-          "C++",
-          "JavaScript",
-          "Open Source",
-          "Documentation",
-        ],
-        about:
-          "CSE Sophomore | GSoC Contributor | Open Source Evangelist. Contributed to major repos like React and Kubernetes. I believe in community-driven code. Let's discuss open-source culture!",
-      },
-      {
-        firstName: "Arushi",
-        lastName: "Tiwari",
-        emailId: "arushi.data@gmail.com",
-        password: commonPass,
-        age: 21,
-        gender: "female",
-        mobileNo: "9876543223",
-        skillsOrInterests: [
-          "SQL",
-          "PySpark",
-          "Hadoop",
-          "Data Engineering",
-          "ETL",
-          "Big Data",
-        ],
-        about:
-          "B.Tech CSE | Aspiring Data Engineer | I love playing with massive datasets. Working on ETL pipelines and data warehousing projects. Let's talk about Big Data architecture!",
-      },
-      {
-        firstName: "Dev",
-        lastName: "Kashyap",
-        emailId: "dev.swift@gmail.com",
-        password: commonPass,
-        age: 21,
-        gender: "male",
-        mobileNo: "9876543224",
-        skillsOrInterests: [
-          "Swift",
-          "SwiftUI",
-          "iOS Development",
-          "Xcode",
-          "Combine",
-          "CoreData",
-        ],
-        about:
-          "3rd Year CSE | iOS Developer | Building premium Apple Ecosystem apps. Passionate about clean architecture and SwiftUI. If you're an Apple fanboy/girl, we should definitely connect!",
-      },
-      {
-        firstName: "Prisha",
-        lastName: "Goel",
-        emailId: "prisha.web3@gmail.com",
-        password: commonPass,
-        age: 19,
-        gender: "female",
-        mobileNo: "9876543225",
-        skillsOrInterests: [
-          "Solidity",
-          "Hardhat",
-          "Truffle",
-          "Ethers.js",
-          "Web3",
-          "Polygon",
-        ],
-        about:
-          "Sophomore @ CSE | Smart Contract Dev | Building the future of finance on Polygon. Currently participating in global Hackathons. Always looking for a tech stack to disrupt the status quo!",
-      },
-      {
-        firstName: "Rishabh",
-        lastName: "Pandey",
-        emailId: "rishabh.sys@gmail.com",
-        password: commonPass,
-        age: 22,
-        gender: "male",
-        mobileNo: "9876543226",
-        skillsOrInterests: [
-          "System Design",
-          "Microservices",
-          "Go",
-          "Redis",
-          "Distributed Systems",
-          "SQL",
-        ],
-        about:
-          "Final Year B.Tech | High-scalability Nerd | Building systems that can handle millions of requests. Love reading whitepapers on distributed databases. Hit me up for a technical deep dive!",
-      },
-      {
-        firstName: "Nandini",
-        lastName: "Sethi",
-        emailId: "nandini.ml@gmail.com",
-        password: commonPass,
-        age: 21,
-        gender: "female",
-        mobileNo: "9876543227",
-        skillsOrInterests: [
-          "NLP",
-          "PyTorch",
-          "Python",
-          "MLOps",
-          "Scikit-Learn",
-          "Data Viz",
-        ],
-        about:
-          "B.Tech CSE | ML Engineer | Specialized in Natural Language Processing. Building chatbots that actually feel human. Currently working on fine-tuning LLMs. Let's exchange papers!",
-      },
-      {
-        firstName: "Aryan",
-        lastName: "Mehra",
-        emailId: "aryan.mern@gmail.com",
-        password: commonPass,
-        age: 20,
-        gender: "male",
-        mobileNo: "9876543228",
-        skillsOrInterests: [
-          "Next.js",
-          "TypeScript",
-          "Prisma",
-          "PostgreSQL",
-          "Tailwind",
-          "FullStack",
-        ],
-        about:
-          "CSE Junior | Full Stack Wizard | Transforming complex requirements into elegant code. Ship fast, break nothing. Working on a real-time collaborative tool. Let's build something epic!",
-      },
-      {
-        firstName: "Sanya",
-        lastName: "Malhotra",
-        emailId: "sanya.cloud@gmail.com",
-        password: commonPass,
-        age: 21,
-        gender: "female",
-        mobileNo: "9876543229",
-        skillsOrInterests: [
-          "Google Cloud",
-          "GCP",
-          "Serverless",
-          "Firebase",
-          "Functions",
-          "Cloud Security",
-        ],
-        about:
-          "3rd Year CSE | Cloud Certified | Building serverless architectures that scale to infinity. Firebase expert and GCP enthusiast. Let's connect if you want to move your app to the cloud!",
-      },
-    ]);
+//     const result = await User.insertMany([
+//       {
+//         firstName: "Vikram",
+//         lastName: "Rathore",
+//         emailId: "vikram.cyber@gmail.com",
+//         password: commonPass,
+//         age: 22,
+//         gender: "male",
+//         mobileNo: "9876543220",
+//         skillsOrInterests: [
+//           "Ethical Hacking",
+//           "Python",
+//           "Linux",
+//           "Metasploit",
+//           "Cybersecurity",
+//           "Networking",
+//         ],
+//         about:
+//           "B.Tech CSE | OSCP Aspirant | CTF Player. I find bugs and secure systems. Deeply interested in penetration testing and network security. Let's connect if you're into InfoSec!",
+//       },
+//       {
+//         firstName: "Kritika",
+//         lastName: "Menon",
+//         emailId: "kritika.flutter@gmail.com",
+//         password: commonPass,
+//         age: 21,
+//         gender: "female",
+//         mobileNo: "9876543221",
+//         skillsOrInterests: [
+//           "Flutter",
+//           "Dart",
+//           "Firebase",
+//           "App Development",
+//           "GetX",
+//           "UI/UX",
+//         ],
+//         about:
+//           "Final Year Student | Flutter Developer | Building cross-platform mobile apps with smooth 60fps animations. Published 3 apps on Play Store. Looking for backend devs to collaborate on startup ideas!",
+//       },
+//       {
+//         firstName: "Sameer",
+//         lastName: "Azad",
+//         emailId: "sameer.oss@gmail.com",
+//         password: commonPass,
+//         age: 20,
+//         gender: "male",
+//         mobileNo: "9876543222",
+//         skillsOrInterests: [
+//           "Git",
+//           "GitHub",
+//           "C++",
+//           "JavaScript",
+//           "Open Source",
+//           "Documentation",
+//         ],
+//         about:
+//           "CSE Sophomore | GSoC Contributor | Open Source Evangelist. Contributed to major repos like React and Kubernetes. I believe in community-driven code. Let's discuss open-source culture!",
+//       },
+//       {
+//         firstName: "Arushi",
+//         lastName: "Tiwari",
+//         emailId: "arushi.data@gmail.com",
+//         password: commonPass,
+//         age: 21,
+//         gender: "female",
+//         mobileNo: "9876543223",
+//         skillsOrInterests: [
+//           "SQL",
+//           "PySpark",
+//           "Hadoop",
+//           "Data Engineering",
+//           "ETL",
+//           "Big Data",
+//         ],
+//         about:
+//           "B.Tech CSE | Aspiring Data Engineer | I love playing with massive datasets. Working on ETL pipelines and data warehousing projects. Let's talk about Big Data architecture!",
+//       },
+//       {
+//         firstName: "Dev",
+//         lastName: "Kashyap",
+//         emailId: "dev.swift@gmail.com",
+//         password: commonPass,
+//         age: 21,
+//         gender: "male",
+//         mobileNo: "9876543224",
+//         skillsOrInterests: [
+//           "Swift",
+//           "SwiftUI",
+//           "iOS Development",
+//           "Xcode",
+//           "Combine",
+//           "CoreData",
+//         ],
+//         about:
+//           "3rd Year CSE | iOS Developer | Building premium Apple Ecosystem apps. Passionate about clean architecture and SwiftUI. If you're an Apple fanboy/girl, we should definitely connect!",
+//       },
+//       {
+//         firstName: "Prisha",
+//         lastName: "Goel",
+//         emailId: "prisha.web3@gmail.com",
+//         password: commonPass,
+//         age: 19,
+//         gender: "female",
+//         mobileNo: "9876543225",
+//         skillsOrInterests: [
+//           "Solidity",
+//           "Hardhat",
+//           "Truffle",
+//           "Ethers.js",
+//           "Web3",
+//           "Polygon",
+//         ],
+//         about:
+//           "Sophomore @ CSE | Smart Contract Dev | Building the future of finance on Polygon. Currently participating in global Hackathons. Always looking for a tech stack to disrupt the status quo!",
+//       },
+//       {
+//         firstName: "Rishabh",
+//         lastName: "Pandey",
+//         emailId: "rishabh.sys@gmail.com",
+//         password: commonPass,
+//         age: 22,
+//         gender: "male",
+//         mobileNo: "9876543226",
+//         skillsOrInterests: [
+//           "System Design",
+//           "Microservices",
+//           "Go",
+//           "Redis",
+//           "Distributed Systems",
+//           "SQL",
+//         ],
+//         about:
+//           "Final Year B.Tech | High-scalability Nerd | Building systems that can handle millions of requests. Love reading whitepapers on distributed databases. Hit me up for a technical deep dive!",
+//       },
+//       {
+//         firstName: "Nandini",
+//         lastName: "Sethi",
+//         emailId: "nandini.ml@gmail.com",
+//         password: commonPass,
+//         age: 21,
+//         gender: "female",
+//         mobileNo: "9876543227",
+//         skillsOrInterests: [
+//           "NLP",
+//           "PyTorch",
+//           "Python",
+//           "MLOps",
+//           "Scikit-Learn",
+//           "Data Viz",
+//         ],
+//         about:
+//           "B.Tech CSE | ML Engineer | Specialized in Natural Language Processing. Building chatbots that actually feel human. Currently working on fine-tuning LLMs. Let's exchange papers!",
+//       },
+//       {
+//         firstName: "Aryan",
+//         lastName: "Mehra",
+//         emailId: "aryan.mern@gmail.com",
+//         password: commonPass,
+//         age: 20,
+//         gender: "male",
+//         mobileNo: "9876543228",
+//         skillsOrInterests: [
+//           "Next.js",
+//           "TypeScript",
+//           "Prisma",
+//           "PostgreSQL",
+//           "Tailwind",
+//           "FullStack",
+//         ],
+//         about:
+//           "CSE Junior | Full Stack Wizard | Transforming complex requirements into elegant code. Ship fast, break nothing. Working on a real-time collaborative tool. Let's build something epic!",
+//       },
+//       {
+//         firstName: "Sanya",
+//         lastName: "Malhotra",
+//         emailId: "sanya.cloud@gmail.com",
+//         password: commonPass,
+//         age: 21,
+//         gender: "female",
+//         mobileNo: "9876543229",
+//         skillsOrInterests: [
+//           "Google Cloud",
+//           "GCP",
+//           "Serverless",
+//           "Firebase",
+//           "Functions",
+//           "Cloud Security",
+//         ],
+//         about:
+//           "3rd Year CSE | Cloud Certified | Building serverless architectures that scale to infinity. Firebase expert and GCP enthusiast. Let's connect if you want to move your app to the cloud!",
+//       },
+//     ]);
 
-    res.status(201).json({
-      message: "10 more Diverse Tech Users inserted successfully",
-      insertedCount: result.length,
-    });
-  } catch (err) {
-    res.status(400).json({ message: "Failed", error: err.message });
-  }
-});
+//     res.status(201).json({
+//       message: "10 more Diverse Tech Users inserted successfully",
+//       insertedCount: result.length,
+//     });
+//   } catch (err) {
+//     res.status(400).json({ message: "Failed", error: err.message });
+//   }
+// });
 
 // get api to get documents -> requesting data from db
 // app.get("/users", async (req, res) => {

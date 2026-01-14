@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,32 +7,56 @@ import UserCard from "./UserCard";
 
 const Feed = () => {
   const feed = useSelector((store) => store.feed);
-  const user = useSelector((store) => store.user); // CHANGE 1: User data nikala
+  const user = useSelector((store) => store.user);
   const dispatch = useDispatch();
-  const [page, setPage] = useState(1);
+
   const [isFetching, setIsFetching] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const getFeed = async (pageNumber) => {
-    // Safety Checks:
-    // 1. Agar request chal rahi hai (isFetching) -> Ruk jao
-    // 2. Agar DB mein data khatam ho gaya (hasMore false) -> Ruk jao
-    // 3. Agar User logged out hai -> Ruk jao
+
+  // 🔥 IMPORTANT: Ye variable yaad rakhega ki last fetch kahan tak hua tha
+  // Screen par cards hon ya na hon, isko farq nahi padta.
+  const lastFetchedId = useRef(null);
+
+  const getFeed = async () => {
+    // Agar fetch chal raha hai ya data khatam ho gaya hai, toh ruk jao
     if (isFetching || !hasMore || !user) return;
 
     setIsFetching(true);
     try {
-      const res = await axios.get(
-        `${BASE_URL}feed?page=${pageNumber}&limit=10`,
-        { withCredentials: true }
-      );
-      const newUsers = res.data.data || [];
+      let url = `${BASE_URL}feed?limit=10`;
 
-      // Agar API se 10 se kam users aaye, iska matlab aage aur users nahi hain
-      if (newUsers.length < 10) {
-        setHasMore(false);
+      // Agar pehle kuch fetch ho chuka hai, toh us ID ke baad ka data mango
+      if (lastFetchedId.current) {
+        url += `&after=${lastFetchedId.current}`;
       }
 
-      dispatch(addFeed(newUsers));
+      const res = await axios.get(url, { withCredentials: true });
+      const newUsers = res.data.data || [];
+
+      if (newUsers.length === 0) {
+        setHasMore(false); // Ab DB me aur log nahi hain
+      } else {
+        // Double Check: Duplicate hatane ke liye (safety)
+        // Redux me jo pehle se hain unhe filter kar lo
+        const uniqueNewUsers = newUsers.filter(
+          (newUser) =>
+            !feed?.some((existingUser) => existingUser._id === newUser._id)
+        );
+
+        if (uniqueNewUsers.length > 0) {
+          dispatch(addFeed(uniqueNewUsers));
+          // Last Fetched ID ko update karo taaki agli call iske aage se ho
+          lastFetchedId.current = newUsers[newUsers.length - 1]._id;
+        } else {
+          // Agar filter ke baad sab duplicate nikle, lekin backend ne data bheja tha
+          // Iska matlab humein aur aage dhoondna padega
+          lastFetchedId.current = newUsers[newUsers.length - 1]._id;
+          // Recursively agla batch bula lo (taaki user stuck na ho)
+          setIsFetching(false);
+          getFeed();
+          return;
+        }
+      }
     } catch (error) {
       console.error("Feed fetch error:", error);
     } finally {
@@ -40,33 +64,34 @@ const Feed = () => {
     }
   };
 
+  // 1. Initial Load (Sirf ek baar)
   useEffect(() => {
-    // CHANGE 3: Logic Update
-    // Feed tabhi fetch karo jab Feed Null ho AUR User Logged In ho
-    if (feed === null && user) {
-      getFeed(1);
+    if (user) {
+      // Agar redux khali hai toh fetch karo
+      if (!feed || feed.length === 0) {
+        getFeed();
+      } else {
+        // Agar Redux me pehle se data hai (refresh ke baad),
+        // toh cursor ko sync kar do last user ke saath
+        lastFetchedId.current = feed[feed.length - 1]._id;
+      }
     }
-  }, [feed, user]); // Dependency update ki taaki user change par react kare
+  }, [user]);
 
+  // 2. Infinite Scroll Trigger
   useEffect(() => {
-    // Logic: Agar feed exist karta hai aur 4 se kam cards bache hain
-    if (feed && feed.length <= 4 && !isFetching && hasMore && user) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      getFeed(nextPage);
+    // Jab cards 4 se kam bachein, naya maal mangwa lo
+    if (feed && feed.length <= 4 && hasMore && !isFetching && user) {
+      getFeed();
     }
-  }, [feed, isFetching, hasMore, user]);
+  }, [feed, hasMore, isFetching, user]);
 
   const handleManualRefresh = () => {
-    // 1. Reset States
-    setPage(1);
     setHasMore(true);
-    dispatch(addFeed(null));
-    getFeed(1);
+    lastFetchedId.current = null; // Cursor reset
+    dispatch(addFeed(null)); // UI reset -> First useEffect will trigger fetch
   };
 
-  // Agar user null hai (logout state), toh Spinner mat dikhao, seedha null return karo
-  // Isse UI blink nahi karega logout ke time
   if (!user) return null;
 
   if (feed === null) {
@@ -74,9 +99,6 @@ const Feed = () => {
       <div className="flex justify-center items-center min-h-screen bg-black/50">
         <div className="flex flex-col items-center gap-4">
           <span className="loading loading-spinner loading-lg text-violet-600"></span>
-          <p className="text-gray-400 animate-pulse font-medium">
-            Finding developers near you...
-          </p>
         </div>
       </div>
     );
@@ -84,7 +106,7 @@ const Feed = () => {
 
   return (
     <div
-      className="hero h-[100dvh] w-full overflow-hidden" // overflow-hidden added to prevent scroll
+      className="hero h-[100dvh] w-full overflow-hidden"
       style={{
         backgroundImage:
           "url(https://tinder.com/static/build/8ad4e4299ef5e377d2ef00ba5c94c44c.webp)",
@@ -92,7 +114,6 @@ const Feed = () => {
     >
       <div className="hero-overlay bg-black/70"></div>
 
-      {/* Padding aur width ko responsive kiya gaya hai */}
       <div className="hero-content text-center px-2 my-9 w-full max-w-full">
         <div className="flex flex-col items-center justify-center w-full">
           {feed.length > 0 && (
@@ -103,7 +124,6 @@ const Feed = () => {
             </div>
           )}
 
-          {/* CARD CONTAINER: Isse responsive banane ke liye changes */}
           <div className="relative w-full max-w-[min(90vw,400px)] aspect-[2/3] max-h-[75vh] flex justify-center items-center sm:mt-2 mt-1">
             {feed.length > 0 ? (
               [...feed]
