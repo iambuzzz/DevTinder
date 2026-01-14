@@ -50,7 +50,8 @@ userRouter.get("/user/connections", auth, async (req, res) => {
       .populate(
         "toUserId",
         "firstName lastName photoURL about age gender skillsOrInterests"
-      );
+      )
+      .sort({ updatedAt: -1 });
 
     if (!requests.length) {
       return res

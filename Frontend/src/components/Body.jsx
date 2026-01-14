@@ -5,7 +5,8 @@ import Footer from "./Footer";
 import { useDispatch, useSelector } from "react-redux";
 import { BASE_URL } from "../utils/constants";
 import { addUser } from "../utils/userSlice";
-import { appendRequest } from "../utils/requestSlice";
+import { appendRequest, addRequests } from "../utils/requestSlice";
+import { addRealTimeConnection } from "../utils/connectionSlice";
 import axios from "axios";
 import getSocket from "../utils/socket";
 // Note: disconnectSocket import toh hai par use hum useEffect me nahi karenge refresh ke liye
@@ -49,6 +50,29 @@ const Body = () => {
       console.error("Unread count fetch error", err);
     }
   };
+  const fetchConnectionRequests = async () => {
+    try {
+      const res = await axios.get(BASE_URL + "user/requests", {
+        withCredentials: true,
+      });
+      const rawData = res.data.data || [];
+
+      if (Array.isArray(rawData)) {
+        // Data format waisa hi rakho jaisa slice expect karta hai
+        const formattedData = rawData
+          .filter((item) => item && item.fromUserId)
+          .map((item) => ({
+            ...item.fromUserId,
+            requestId: item._id, // Request ID zaroori hai accept/reject ke liye
+          }));
+
+        // Redux me daal do
+        dispatch(addRequests(formattedData));
+      }
+    } catch (err) {
+      console.error("Connection requests fetch error", err);
+    }
+  };
 
   useEffect(() => {
     if (!userData) {
@@ -56,6 +80,7 @@ const Body = () => {
     } else {
       setLoading(false);
       fetchUnreadCounts();
+      fetchConnectionRequests();
     }
   }, [userData]);
 
@@ -90,11 +115,26 @@ const Body = () => {
       dispatch(appendRequest(data.fromUser));
     };
 
+    const handleConnectionAccepted = (payload) => {
+      const { user, requestId, status, createdAt } = payload.data;
+
+      // Structure waisa banao jaisa UserCard expect karta hai
+      const newConnection = {
+        id: requestId,
+        status: status,
+        createdAt: createdAt,
+        user: user, // The full user object
+      };
+
+      dispatch(addRealTimeConnection(newConnection));
+      // toast.success(`${user.firstName} accepted your request!`);
+    };
+
     // Listeners attach karo
     socket.on("msgrecieved", handleMsgReceived);
     socket.on("onlineUsersList", handleOnlineUsers);
     socket.on("newConnectionRequest", handleConnectionRequest);
-
+    socket.on("connectionAccepted", handleConnectionAccepted);
     // Online Check Logic
     if (socket.connected) {
       socket.emit("getOnlineUsers");
@@ -110,6 +150,7 @@ const Body = () => {
       socket.off("msgrecieved", handleMsgReceived);
       socket.off("onlineUsersList", handleOnlineUsers);
       socket.off("newConnectionRequest", handleConnectionRequest);
+      socket.off("connectionAccepted", handleConnectionAccepted);
       socket.off("connect");
     };
   }, [userData, dispatch]);

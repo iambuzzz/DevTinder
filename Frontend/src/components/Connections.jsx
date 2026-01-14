@@ -2,13 +2,13 @@ import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 import { useDispatch, useSelector } from "react-redux";
-import { addConnections } from "../utils/connectionSlice";
-import { motion, AnimatePresence } from "framer-motion"; // Animation King
-import { Link } from "react-router-dom"; // Chat pe le jaane ke liye
-import UserCard from "./UserCard"; // Profile dekhne ke liye reuse karenge
+import { addConnections, markConnectionsSeen } from "../utils/connectionSlice";
+import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
+import UserCard from "./UserCard";
 
 const Connections = () => {
-  const connections = useSelector((store) => store.connections);
+  const connections = useSelector((store) => store.connections?.data);
   const dispatch = useDispatch();
   const onlineList = useSelector((store) => store.chat?.onlineUsers) || [];
   // Local States
@@ -32,6 +32,10 @@ const Connections = () => {
   useEffect(() => {
     fetchConnections();
   }, []);
+
+  useEffect(() => {
+    dispatch(markConnectionsSeen());
+  }, [dispatch]);
 
   // Filter Logic: Search by Name
   const filteredConnections = useMemo(() => {

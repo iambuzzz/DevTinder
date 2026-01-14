@@ -98,6 +98,22 @@ requestRouter.post(
       }
       request.status = status;
       const data = await request.save();
+
+      if (status === "accepted") {
+        const targetUserId = request.fromUserId;
+        const targetSocketId = global.onlineUsers.get(targetUserId.toString());
+        if (targetSocketId) {
+          global.io.to(targetSocketId).emit("connectionAccepted", {
+            message: `Your connection request was ${status}!`,
+            data: {
+              user: req.user,
+              requestId: request._id,
+              status: "accepted",
+              createdAt: new Date(),
+            },
+          });
+        }
+      }
       res.status(200).json({ message: "Request " + status + " successfully!" });
     } catch (err) {
       res
