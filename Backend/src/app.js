@@ -30,13 +30,42 @@ const userRouter = require("./routes/userRouter.js");
 const paymentRouter = require("./routes/paymentRouter.js");
 const { initializeSocket } = require("./utils/socket.js");
 const chatRouter = require("./routes/chatRouter.js");
+const { startGrpcServer } = require("./grpc/grpcServer"); // [PHASE 3] gRPC Server
+const { connectKafkaProducer } = require("./config/kafka.js"); // [PHASE 4] Kafka
+const { initChatWorker } = require("./workers/chatWorker.js"); // [PHASE 4] Worker
 
 const start = async () => {
   try {
     await dbConnect();
-    server.listen(3000, () => {
-      console.log("Server running on port 3000...");
+
+    /*
+      // --- OLD CODE (Single server, hardcoded port) ---
+      // server.listen(3000, () => {
+      //   console.log("Server running on port 3000...");
+      // });
+    */
+    // --- NEW CODE (Phase 3 - Configurable ports for multi-server setup) ---
+    // HTTP_PORT: The HTTP/WebSocket port (default 3000)
+    // GRPC_PORT: The gRPC port for inter-server communication (default 4000)
+    // Usage for 2 servers:
+    //   Server 1: HTTP_PORT=3000 GRPC_PORT=4000 npm run dev
+    //   Server 2: HTTP_PORT=3001 GRPC_PORT=4001 npm run dev
+    const HTTP_PORT = process.env.HTTP_PORT || 3000;
+    const GRPC_PORT = process.env.GRPC_PORT || 4000;
+
+    server.listen(HTTP_PORT, () => {
+      console.log(`🌐 HTTP/WebSocket Server running on port ${HTTP_PORT}`);
     });
+
+    // Start the gRPC server for inter-server communication
+    startGrpcServer(global.io, GRPC_PORT);
+
+    // [PHASE 4] Start Kafka Producer
+    await connectKafkaProducer();
+    
+    // [PHASE 4] Start Kafka Consumer Worker (for message durability)
+    await initChatWorker();
+
   } catch (err) {
     console.error("Startup failed", err);
   }

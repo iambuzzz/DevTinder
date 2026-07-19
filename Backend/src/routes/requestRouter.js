@@ -3,6 +3,13 @@ const ConnectionRequest = require("../models/connectionRequest");
 const requestRouter = express.Router();
 const auth = require("../middlewares/auth.js");
 const User = require("../models/user.js");
+/*
+  // --- OLD CODE (Phase 2 - only socketId) ---
+  // const { getUserSocketId } = require("../config/redis"); // [PHASE 2] Redis Session Service
+*/
+// --- NEW CODE (Phase 3 - full session with gRPC address) ---
+const { getUserSession } = require("../config/redis"); // [PHASE 2+3] Redis Session Service
+const { grpcDeliverNotification } = require("../grpc/grpcClient"); // [PHASE 3] gRPC Client
 
 requestRouter.post(
   "/request/send/:status/:toUserId",
@@ -50,16 +57,39 @@ requestRouter.post(
       const data = await connectionRequest.save();
       // Connection request save hone ke baad
       const targetUserIdString = toUserId.toString();
-      const targetSocketId = global.onlineUsers.get(targetUserIdString);
+      /*
+        // --- OLD CODE (In-Memory Map) ---
+        // const targetSocketId = global.onlineUsers.get(targetUserIdString);
+      */
+      /*
+        // --- OLD CODE (Phase 2 - Redis but no gRPC, same-server only) ---
+        // const targetSocketId = await getUserSocketId(targetUserIdString);
+        // if (targetSocketId) {
+        //   global.io.to(targetSocketId).emit("newConnectionRequest", { ... });
+        // }
+      */
+      // --- NEW CODE (Phase 3 - Redis + gRPC for cross-server notifications) ---
+      const targetSession = await getUserSession(targetUserIdString);
 
       // Debugging Log (Agar ab bhi issue aaye toh isse check karna)
-      // console.log(`Sending Req to: ${targetUserIdString}, SocketFound: ${targetSocketId}`);
+      // console.log(`Sending Req to: ${targetUserIdString}, SessionFound: ${!!targetSession}`);
 
-      if (targetSocketId) {
-        global.io.to(targetSocketId).emit("newConnectionRequest", {
-          fromUser: req.user,
-          message: "New connection request received!",
-        });
+      if (targetSession) {
+        const { socketId: targetSocketId, grpcAddress: targetGrpcAddress } = targetSession;
+        const myGrpcAddress = `${process.env.GRPC_HOST || "localhost"}:${process.env.GRPC_PORT || 4000}`;
+        const payload = { fromUser: req.user, message: "New connection request received!" };
+
+        if (targetGrpcAddress === myGrpcAddress) {
+          // SAME SERVER: emit locally
+          global.io.to(targetSocketId).emit("newConnectionRequest", payload);
+        } else {
+          // DIFFERENT SERVER: use gRPC
+          try {
+            await grpcDeliverNotification(targetGrpcAddress, targetSocketId, "newConnectionRequest", payload);
+          } catch (grpcErr) {
+            console.error("gRPC connection request notification failed:", grpcErr.message);
+          }
+        }
       }
 
       res.json({
@@ -101,9 +131,21 @@ requestRouter.post(
 
       if (status === "accepted") {
         const targetUserId = request.fromUserId;
-        const targetSocketId = global.onlineUsers.get(targetUserId.toString());
-        if (targetSocketId) {
-          global.io.to(targetSocketId).emit("connectionAccepted", {
+        /*
+          // --- OLD CODE (In-Memory Map) ---
+          // const targetSocketId = global.onlineUsers.get(targetUserId.toString());
+        */
+        /*
+          // --- OLD CODE (Phase 2 - Redis but no gRPC, same-server only) ---
+          // const targetSocketId = await getUserSocketId(targetUserId.toString());
+          // if (targetSocketId) { global.io.to(targetSocketId).emit(...); }
+        */
+        // --- NEW CODE (Phase 3 - Redis + gRPC for cross-server notifications) ---
+        const targetSession = await getUserSession(targetUserId.toString());
+        if (targetSession) {
+          const { socketId: targetSocketId, grpcAddress: targetGrpcAddress } = targetSession;
+          const myGrpcAddress = `${process.env.GRPC_HOST || "localhost"}:${process.env.GRPC_PORT || 4000}`;
+          const payload = {
             message: `Your connection request was ${status}!`,
             data: {
               user: req.user,
@@ -111,7 +153,19 @@ requestRouter.post(
               status: "accepted",
               createdAt: new Date(),
             },
-          });
+          };
+
+          if (targetGrpcAddress === myGrpcAddress) {
+            // SAME SERVER: emit locally
+            global.io.to(targetSocketId).emit("connectionAccepted", payload);
+          } else {
+            // DIFFERENT SERVER: use gRPC
+            try {
+              await grpcDeliverNotification(targetGrpcAddress, targetSocketId, "connectionAccepted", payload);
+            } catch (grpcErr) {
+              console.error("gRPC accepted notification failed:", grpcErr.message);
+            }
+          }
         }
       }
       res.status(200).json({ message: "Request " + status + " successfully!" });

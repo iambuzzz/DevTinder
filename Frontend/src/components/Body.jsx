@@ -12,6 +12,7 @@ import getSocket from "../utils/socket";
 // Note: disconnectSocket import toh hai par use hum useEffect me nahi karenge refresh ke liye
 import {
   setOnlineUsers,
+  updateUserStatus,
   incrementUnreadCount,
   setAllUnreadCounts,
 } from "../utils/chatSlice";
@@ -111,6 +112,11 @@ const Body = () => {
       dispatch(setOnlineUsers(users));
     };
 
+    // [PHASE 4] Handle targeted status update instead of full array replacement
+    const handleStatusUpdate = (data) => {
+      dispatch(updateUserStatus(data));
+    };
+
     const handleConnectionRequest = (data) => {
       dispatch(appendRequest(data.fromUser));
     };
@@ -133,25 +139,33 @@ const Body = () => {
     // Listeners attach karo
     socket.on("msgrecieved", handleMsgReceived);
     socket.on("onlineUsersList", handleOnlineUsers);
+    socket.on("userStatusUpdate", handleStatusUpdate); // [PHASE 4]
     socket.on("newConnectionRequest", handleConnectionRequest);
     socket.on("connectionAccepted", handleConnectionAccepted);
     // Online Check Logic
-    if (socket.connected) {
+    const requestOnlineUsers = () => {
+      console.log("[DEBUG] Emitting getOnlineUsers to backend");
       socket.emit("getOnlineUsers");
-    } else {
-      socket.on("connect", () => {
-        socket.emit("getOnlineUsers");
-      });
+    };
+
+    if (socket.connected) {
+      console.log("[DEBUG] Socket already connected on mount, emitting immediately");
+      requestOnlineUsers();
     }
+    socket.on("connect", () => {
+      console.log("[DEBUG] Socket connected event fired, emitting getOnlineUsers");
+      requestOnlineUsers();
+    });
 
     // CLEANUP FUNCTION (Ab ye safe hai)
     return () => {
       // Hum sirf apne function pass kar rahe hain, toh Chat.jsx wala listener delete nahi hoga!
       socket.off("msgrecieved", handleMsgReceived);
       socket.off("onlineUsersList", handleOnlineUsers);
+      socket.off("userStatusUpdate", handleStatusUpdate);
       socket.off("newConnectionRequest", handleConnectionRequest);
       socket.off("connectionAccepted", handleConnectionAccepted);
-      socket.off("connect");
+      socket.off("connect", requestOnlineUsers);
     };
   }, [userData, dispatch]);
 

@@ -35,6 +35,7 @@ const Chat = () => {
   const chatBoxRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const socketRef = useRef(null);
+  const isTypingSentRef = useRef(false);
 
   const scrollContainerStyle = {
     WebkitOverflowScrolling: "touch",
@@ -52,7 +53,7 @@ const Chat = () => {
     return new Date(date).toLocaleDateString();
   };
 
-  // Call 1: Mark Seen (Ye aapki screenshot mein Line 56 wali call hai)
+  // Call 1: Mark Seen 
   const markMessagesAsSeen = async () => {
     if (!targetId) return;
     try {
@@ -79,7 +80,7 @@ const Chat = () => {
     socketRef.current = socket;
     socket.emit("joinChat", { targetId });
 
-    // Call 2: Fetch Messages (Ye aapki screenshot mein Line 71 wali call hai)
+    // Call 2: Fetch Messages
     const fetchChatMessages = async () => {
       try {
         const response = await axios.post(
@@ -218,11 +219,19 @@ const Chat = () => {
 
   const handleInputChange = (e) => {
     setMessage(e.target.value);
-    socketRef.current.emit("typing", { targetId, isTyping: true });
+
+    // Sirf tabhi "typing: true" bhejo jab pehle se nahi bheja ho (prevents spamming backend)
+    if (!isTypingSentRef.current) {
+      socketRef.current.emit("typing", { targetId, isTyping: true });
+      isTypingSentRef.current = true;
+    }
 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    
     typingTimeoutRef.current = setTimeout(() => {
+      // 1.5 second tak kuch type nahi kiya, toh "typing: false" bhejo
       socketRef.current.emit("typing", { targetId, isTyping: false });
+      isTypingSentRef.current = false;
     }, 1500);
   };
 
@@ -273,21 +282,24 @@ const Chat = () => {
                 <h2 className="text-white font-bold text-lg">
                   {targetProfile.name}
                 </h2>
-                {isTargetTyping ? (
-                  <p className="text-green-400 text-[10px] font-bold italic animate-pulse">
-                    typing...
-                  </p>
-                ) : isOnline ? (
-                  <p className="text-green-400 text-[10px] font-bold">
-                    ● Online
-                  </p>
-                ) : (
-                  <p className="text-white/40 text-[10px]">
-                    {targetLastSeen
-                      ? `Last seen: ${formatLastSeen(targetLastSeen)}`
-                      : "Offline"}
-                  </p>
-                )}
+                <p
+                  key={isTargetTyping ? "typing" : isOnline ? "online" : "offline"}
+                  className={`text-[10px] font-bold ${
+                    isTargetTyping
+                      ? "text-green-400 italic animate-pulse"
+                      : isOnline
+                      ? "text-green-400"
+                      : "text-white/40"
+                  }`}
+                >
+                  {isTargetTyping
+                    ? "typing..."
+                    : isOnline
+                    ? "● Online"
+                    : targetLastSeen
+                    ? `Last seen: ${formatLastSeen(targetLastSeen)}`
+                    : "Offline"}
+                </p>
               </div>
             </div>
 

@@ -9,6 +9,17 @@ const chatSlice = createSlice({
     setOnlineUsers: (state, action) => {
       state.onlineUsers = action.payload;
     },
+    // [PHASE 4] Handle granular presence updates (O(1) instead of O(N))
+    updateUserStatus: (state, action) => {
+      const { userId, isOnline } = action.payload;
+      if (isOnline) {
+        if (!state.onlineUsers.includes(userId)) {
+          state.onlineUsers.push(userId);
+        }
+      } else {
+        state.onlineUsers = state.onlineUsers.filter(id => id !== userId);
+      }
+    },
     incrementUnreadCount: (state, action) => {
       const userId = action.payload;
       state.unreadCounts[userId] = (state.unreadCounts[userId] || 0) + 1;
@@ -25,6 +36,7 @@ const chatSlice = createSlice({
 
 export const {
   setOnlineUsers,
+  updateUserStatus,
   incrementUnreadCount,
   clearUnreadCount,
   setAllUnreadCounts,

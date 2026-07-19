@@ -28,9 +28,13 @@ const UserChats = () => {
     }
   };
 
+  // [BUG FIX]: Previously this only ran once on mount (empty dependency array []).
+  // When a new message arrived, the unread badge count updated (via Redux), but the
+  // lastMessage text never refreshed because we never re-fetched the chat list.
+  // Now we re-fetch whenever unreadCounts changes, keeping the preview text in sync!
   useEffect(() => {
     fetchAllChats();
-  }, []);
+  }, [unreadCounts]);
 
   useEffect(() => {
     const results = chats.filter((chat) =>
