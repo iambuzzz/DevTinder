@@ -1,38 +1,30 @@
-const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses");
+const { Resend } = require("resend");
 
-const REGION = "ap-south-1";
+// Resend free tier: 3000 emails/month. Domain verify hone tak sirf onboarding@resend.dev se
+// aur sirf apne account ke email par bhej sakte ho.
+const FROM = process.env.EMAIL_FROM || "DevTinder <onboarding@resend.dev>";
 
-const sesClient = new SESClient({
-  region: REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_KEY,
-  },
-});
+let resend;
+const getClient = () => {
+  if (!resend) resend = new Resend(process.env.RESEND_API_KEY);
+  return resend;
+};
 
 const sendEmail = async (toAddress, subject, bodyHtml, bodyText) => {
-  const params = {
-    Destination: {
-      ToAddresses: ["ambujjais1@gmail.com"],
-    },
-    Message: {
-      Body: {
-        Html: { Charset: "UTF-8", Data: bodyHtml },
-        Text: { Charset: "UTF-8", Data: bodyText },
-      },
-      Subject: { Charset: "UTF-8", Data: subject },
-    },
-    Source: "support@iambuzzdev.in",
-  };
+  const { data, error } = await getClient().emails.send({
+    from: FROM,
+    to: [toAddress],
+    subject,
+    html: bodyHtml,
+    text: bodyText,
+  });
 
-  try {
-    const data = await sesClient.send(new SendEmailCommand(params));
-    console.log("Success: Email sent! ID:", data.MessageId);
-    return data;
-  } catch (err) {
-    console.error("Error: Email failed!", err);
-    throw err;
+  if (error) {
+    console.error("Error: Email failed!", error);
+    throw new Error(error.message);
   }
+  console.log("Success: Email sent! ID:", data.id);
+  return data;
 };
 
 // CommonJS export

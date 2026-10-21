@@ -4,7 +4,7 @@
 
 **DevTinder** is a robust, full-stack social networking application designed specifically for developers to connect, collaborate, and network. Think of it as "Tinder for Developers." Users can swipe through profiles, send connection requests, chat in real-time, and upgrade to premium memberships.
 
-This project goes beyond basic CRUD operations, implementing advanced backend engineering concepts like **Job Queues (Bull)**, **Scheduled Tasks (Cron)**, **AWS Email Integration (SES)**, **Payment Gateways (Razorpay)**, and **Cloud Storage (AWS S3)**.
+This project goes beyond basic CRUD operations, implementing advanced backend engineering concepts like **Job Queues (Bull)**, **Scheduled Tasks (Cron)**, **Email Integration (Resend)**, **Payment Gateways (Razorpay)**, and **Cloud Storage (AWS S3)**.
 
 **🔗 Live Demo:** [https://iambuzzdev.in/](https://iambuzzdev.in/)
 
@@ -45,7 +45,7 @@ The backend is highly scalable, utilizing the following libraries:
 - **Real-Time Engine:** `socket.io` (WebSockets for Chat & Status).
 - **File Storage:** `@aws-sdk/client-s3`, `multer`, `multer-s3` (Profile photo uploads to AWS S3).
 - **Payments:** `razorpay` (Payment gateway integration).
-- **Email Service:** `@aws-sdk/client-ses` (Amazon Simple Email Service).
+- **Email Service:** `resend` (Resend email API).
 - **Task Queues:** `bull` (Redis-based queue for background job processing).
 - **Scheduling:** `node-cron` (Cron jobs for automated tasks).
 
@@ -82,7 +82,7 @@ The backend is highly scalable, utilizing the following libraries:
 
 ### 5. Backend Asynchronous Processing
 - **Email Notifications:**
-  - Automated emails (Welcome, New Connection) sent using **AWS SES**.
+  - Automated emails (Welcome, New Connection) sent using **Resend**.
   - **Bull Queues:** Emails are offloaded to a Redis queue to prevent blocking the main server thread.
 - **Scheduled Maintenance:**
   - **Node-cron** runs daily scripts to clean up expired tokens or old logs.

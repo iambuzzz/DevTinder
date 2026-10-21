@@ -3,7 +3,7 @@ const multerS3 = require("multer-s3");
 const multer = require("multer");
 const path = require("path");
 
-// S3 alag AWS account mein hai (SES wale se different), isliye alag keys: AWS_S3_ACCESS_KEY / AWS_S3_SECRET_KEY
+// S3 ke liye alag IAM keys: AWS_S3_ACCESS_KEY / AWS_S3_SECRET_KEY
 const REGION = process.env.AWS_REGION || "eu-north-1";
 const BUCKET = process.env.AWS_S3_BUCKET;
 
