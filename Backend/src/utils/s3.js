@@ -3,7 +3,7 @@ const multerS3 = require("multer-s3");
 const multer = require("multer");
 const path = require("path");
 
-// IAM user ko S3 PutObject permission chahiye
+// Same IAM user as SES, bas usko S3 PutObject permission chahiye
 const REGION = process.env.AWS_REGION || "eu-north-1";
 const BUCKET = process.env.AWS_S3_BUCKET;
 
