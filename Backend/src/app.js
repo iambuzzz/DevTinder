@@ -75,6 +75,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
+      "https://devtinder.iambuzzdev.in",
       "https://iambuzzdev.in",
       "http://13.48.58.37",
       "https://13.48.58.37",

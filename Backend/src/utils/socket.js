@@ -33,6 +33,7 @@ const initializeSocket = (server) => {
     cors: {
       origin: [
         "http://localhost:5173",
+        "http://devtinder.iambuzzdev.in",
         "https://iambuzzdev.in",
         "http://13.48.58.37",
         "https://13.48.58.37",

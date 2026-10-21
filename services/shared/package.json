@@ -1,0 +1,14 @@
+{
+  "name": "devtinder-shared",
+  "version": "1.0.0",
+  "description": "Shared models and config for DevTinder Microservices",
+  "main": "index.js",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "ioredis": "^5.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "kafkajs": "^2.0.0",
+    "mongoose": "^8.0.0",
+    "validator": "^13.11.0"
+  }
+}

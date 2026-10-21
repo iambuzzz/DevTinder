@@ -1,0 +1,29 @@
+# Windows (ya koi bhi OS) pe scaled DevTinder ke liye Redis + Kafka + Nginx.
+# Backend ke 3 Node servers Docker ke BAHAR, normal terminals mein chalte hain.
+# Start:  docker compose up -d      Stop:  docker compose down
+
+services:
+  redis:
+    image: redis:7.4
+    container_name: devtinder-redis
+    ports:
+      - "6379:6379"
+
+  kafka:
+    # Single-node Kafka (KRaft mode, Zookeeper nahi chahiye).
+    # Default config clients ko localhost:9092 advertise karta hai.
+    image: apache/kafka:3.9.0
+    container_name: devtinder-kafka
+    ports:
+      - "9092:9092"
+
+  nginx:
+    image: nginx:1.27
+    container_name: devtinder-nginx
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx.docker.conf:/etc/nginx/nginx.conf:ro
+    extra_hosts:
+      # Container ke andar se Windows machine (host) ke ports 3000-3002 tak pahunchne ke liye
+      - "host.docker.internal:host-gateway"

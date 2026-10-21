@@ -1,0 +1,77 @@
+/*
+  [PHASE 3: gRPC SERVICE DEFINITION]
+  
+  WHAT: This .proto file defines the "contract" between chat servers.
+        It's like an API specification, but for server-to-server communication.
+  
+  WHY: gRPC uses Protocol Buffers (protobuf) to define messages and services.
+       Unlike JSON, protobuf is binary — much smaller and faster to serialize/deserialize.
+  
+  HOW: Each chat server runs a gRPC server. When Server 1 needs to deliver a message
+       to a user on Server 2, it calls Server 2's gRPC endpoint defined here.
+*/
+
+syntax = "proto3";
+
+package chat;
+
+// The ChatService — every chat server exposes these gRPC endpoints
+service ChatService {
+  
+  // Server 1 tells Server 2: "Deliver this message to socketId xyz"
+  rpc DeliverMessage (DeliverMessageRequest) returns (DeliverMessageResponse);
+  
+  // Server 1 tells Server 2: "Tell socketId xyz that their messages were seen"
+  rpc DeliverSeenUpdate (DeliverSeenRequest) returns (DeliverSeenResponse);
+
+  // Server 1 tells Server 2: "Show typing indicator to socketId xyz"
+  rpc DeliverTypingIndicator (DeliverTypingRequest) returns (DeliverTypingResponse);
+
+  // Server 1 tells Server 2: "Notify socketId xyz about a new connection request"
+  rpc DeliverNotification (DeliverNotificationRequest) returns (DeliverNotificationResponse);
+}
+
+// --- Message Delivery ---
+message DeliverMessageRequest {
+  string target_socket_id = 1;   // The WebSocket ID on the receiving server
+  string text = 2;               // The message content
+  string sender_id = 3;          // Who sent it
+  string time = 4;               // Formatted time string
+}
+
+message DeliverMessageResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+// --- Seen Update ---
+message DeliverSeenRequest {
+  string target_socket_id = 1;   // The sender's socket (to notify them)
+  string viewer_id = 2;          // Who viewed the messages
+}
+
+message DeliverSeenResponse {
+  bool success = 1;
+}
+
+// --- Typing Indicator ---
+message DeliverTypingRequest {
+  string target_socket_id = 1;
+  string sender_id = 2;
+  bool is_typing = 3;
+}
+
+message DeliverTypingResponse {
+  bool success = 1;
+}
+
+// --- Generic Notification (connection requests, accepted, etc.) ---
+message DeliverNotificationRequest {
+  string target_socket_id = 1;
+  string event_name = 2;         // e.g., "newConnectionRequest", "connectionAccepted"
+  string payload_json = 3;       // JSON string of the event data
+}
+
+message DeliverNotificationResponse {
+  bool success = 1;
+}
