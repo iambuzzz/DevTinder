@@ -6,7 +6,7 @@
 
 The backend is a **horizontally scaled monolith**: multiple Node.js instances run behind an **Nginx load balancer** and coordinate through **Redis** (shared sessions + Pub/Sub presence), **gRPC** (cross-server message routing), and **Apache Kafka** (durable chat delivery). Media is stored on **AWS S3** and payments run on **Razorpay**.
 
-**🔗 Live Demo:** [https://iambuzzdev.in/](https://iambuzzdev.in/)
+**🔗 Live Demo:** [https://devtinder.iambuzzdev.in/](https://devtinder.iambuzzdev.in/)
 
 ---
 
@@ -174,7 +174,7 @@ KAFKA_BROKERS=localhost:9092
 
 ## 🌐 Deployment Flow
 
-1. A request hits `https://iambuzzdev.in`.
+1. A request hits `https://devtinder.iambuzzdev.in`.
 2. **Cloudflare** resolves DNS and terminates SSL.
 3. Traffic reaches the **AWS EC2** instance.
 4. **Nginx** load-balances HTTP and WebSocket traffic across the Node.js instances.

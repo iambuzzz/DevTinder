@@ -26,7 +26,7 @@ const sendWeeklyMails = async () => {
     //             <p>Developers with skills like yours are getting 2x more matches this week!</p>
     //             <p>Check out who's looking at your profile.</p>
     //             <br>
-    //             <a href="https://iambuzzdev.in/" style="background: #e74c3c; color: white; padding: 10px; text-decoration: none; border-radius: 5px;">View My Matches</a>
+    //             <a href="https://devtinder.iambuzzdev.in/" style="background: #e74c3c; color: white; padding: 10px; text-decoration: none; border-radius: 5px;">View My Matches</a>
     //             <br>
     //             <hr>
     //             <p style="font-size: 10px; color: gray;">If you don't want these updates, <a href="#">unsubscribe here</a>.</p>
@@ -83,7 +83,7 @@ const sendWeeklyMails = async () => {
           <div style="font-family: sans-serif;">
             <h2>Weekly Digest for ${user.firstName}</h2>
             <p>Check out who's looking at your profile.</p>
-            <a href="https://iambuzzdev.in/" style="background: #e74c3c; color: white; padding: 10px; text-decoration: none; border-radius: 5px;">View My Matches</a>
+            <a href="https://devtinder.iambuzzdev.in/" style="background: #e74c3c; color: white; padding: 10px; text-decoration: none; border-radius: 5px;">View My Matches</a>
           </div>`,
         text: "Check your weekly matches on DevTinder!",
       },

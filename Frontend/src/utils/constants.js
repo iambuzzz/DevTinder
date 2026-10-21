@@ -22,5 +22,5 @@ export const BASE_URL = isLocal ? "http://localhost:8080/" : "/api/";
 // --- NEW CODE (Phase 3 - Through NGINX Load Balancer) ---
 export const SOCKET_URL = isLocal
   ? "http://localhost:8080/"
-  : "https://iambuzzdev.in/";
+  : "https://devtinder.iambuzzdev.in/";
 
