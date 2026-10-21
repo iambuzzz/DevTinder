@@ -5,6 +5,8 @@ const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 const { sendEmail } = require("../utils/sendEmail");
+const { queueEmail } = require("../queues/mailQueue");
+const { welcomeEmail } = require("../utils/emailTemplates");
 
 authRouter.post("/signup", async (req, res) => {
   try {
@@ -37,6 +39,9 @@ authRouter.post("/signup", async (req, res) => {
     });
 
     const savedUser = await user.save();
+
+    // Welcome email (Bull queue -> Resend), response ko block nahi karta
+    queueEmail(savedUser.emailId, welcomeEmail(savedUser.firstName));
 
     //generate JWT token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {

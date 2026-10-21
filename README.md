@@ -120,7 +120,8 @@ Presence uses **Redis Pub/Sub** (`presenceEvents` channel) rather than Kafka: it
 ### 5. Background Jobs
 - **Bull** queue (Redis) offloads email sending from the request thread.
 - **Resend** sends the emails; **node-cron** schedules the weekly digest.
-- The email jobs are currently switched off in production (the cron import and send calls are commented out).
+- **Transactional emails:** a welcome email on signup and a Premium confirmation (with payment receipt) after a successful Razorpay payment, sent exactly once even though both the webhook and the verify endpoint can upgrade the user.
+- The weekly digest cron is kept disabled to stay within the Resend free-tier limits.
 
 ---
 

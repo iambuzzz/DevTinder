@@ -3,7 +3,7 @@ const { sendEmail } = require("../utils/sendEmail");
 
 // 1. Queue Create Karo (Redis se connect karke)
 const emailQueue = new Queue("email-sending", {
-  redis: { port: 6379, host: "127.0.0.1" },
+  redis: { port: 6379, host: process.env.REDIS_HOST || "127.0.0.1" },
 });
 // Redis connection check
 emailQueue.client.on("error", (err) => {
@@ -24,4 +24,11 @@ emailQueue.process(2, async (job) => {
   await sendEmail(email, subject, html, text);
 });
 
+// Fire-and-forget: email fail hone se signup/payment fail nahi hona chahiye
+const queueEmail = (email, { subject, html, text }) =>
+  emailQueue
+    .add({ email, subject, html, text }, { attempts: 3, backoff: 5000, removeOnComplete: true })
+    .catch((err) => console.error("Email queue error:", err.message));
+
 module.exports = emailQueue;
+module.exports.queueEmail = queueEmail;

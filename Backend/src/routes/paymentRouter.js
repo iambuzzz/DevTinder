@@ -7,6 +7,20 @@ const User = require("../models/user");
 const {
   validateWebhookSignature,
 } = require("razorpay/dist/utils/razorpay-utils");
+const { queueEmail } = require("../queues/mailQueue");
+const { premiumEmail } = require("../utils/emailTemplates");
+
+// Webhook aur /verify dono user ko premium karte hain, isliye sirf
+// isPremium false -> true hone par hi email bhejo (duplicate mail na jaye)
+const upgradeToPremium = async (userId, { amount, paymentId }) => {
+  const user = await User.findOneAndUpdate(
+    { _id: userId, isPremium: { $ne: true } },
+    { isPremium: true }
+  );
+  if (user) {
+    queueEmail(user.emailId, premiumEmail(user.firstName, { amount, paymentId }));
+  }
+};
 
 paymentRouter.post("/payment/create", auth, async (req, res) => {
   try {
@@ -73,7 +87,10 @@ paymentRouter.post("/payment/webhookk", async (req, res) => {
         payment.paymentId = paymentData.id;
         await payment.save();
 
-        await User.findByIdAndUpdate(payment.userId, { isPremium: true });
+        await upgradeToPremium(payment.userId, {
+          amount: paymentData.amount,
+          paymentId: paymentData.id,
+        });
       }
     }
   } catch (error) {
@@ -96,11 +113,8 @@ paymentRouter.post("/payment/verify", auth, async (req, res) => {
       .digest("hex");
 
     if (generated_signature === razorpay_signature) {
-      // User ko Premium karo
-      await User.findByIdAndUpdate(req.user._id, { isPremium: true });
-
       // Payment record update karo
-      await Payment.findOneAndUpdate(
+      const payment = await Payment.findOneAndUpdate(
         { orderId: razorpay_order_id },
         {
           status: "captured",
@@ -108,6 +122,12 @@ paymentRouter.post("/payment/verify", auth, async (req, res) => {
           signature: razorpay_signature,
         }
       );
+
+      // User ko Premium karo (+ premium email)
+      await upgradeToPremium(req.user._id, {
+        amount: payment?.amount ?? 500 * 100,
+        paymentId: razorpay_payment_id,
+      });
 
       return res.json({ success: true, message: "Payment verified" });
     } else {
