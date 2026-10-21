@@ -3,15 +3,15 @@ const multerS3 = require("multer-s3");
 const multer = require("multer");
 const path = require("path");
 
-// Same IAM user as SES, bas usko S3 PutObject permission chahiye
+// S3 alag AWS account mein hai (SES wale se different), isliye alag keys: AWS_S3_ACCESS_KEY / AWS_S3_SECRET_KEY
 const REGION = process.env.AWS_REGION || "eu-north-1";
 const BUCKET = process.env.AWS_S3_BUCKET;
 
 const s3Client = new S3Client({
   region: REGION,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_KEY,
+    accessKeyId: process.env.AWS_S3_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_S3_SECRET_KEY,
   },
 });
 
