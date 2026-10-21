@@ -56,8 +56,11 @@ const userSchema = new mongoose.Schema(
 
     photoURL: {
       type: String,
-      default:
-        "https://www.shutterstock.com/image-vector/vector-flat-illustration-grayscale-avatar-600nw-2264922221.jpg",
+      // Default avatar S3 par hai (migrateImagesToS3.js upload karta hai)
+      default: () =>
+        process.env.AWS_S3_BUCKET
+          ? `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION || "eu-north-1"}.amazonaws.com/defaults/avatar.jpg`
+          : "https://www.shutterstock.com/image-vector/vector-flat-illustration-grayscale-avatar-600nw-2264922221.jpg",
       validate: {
         validator: function (v) {
           return validator.isURL(v);

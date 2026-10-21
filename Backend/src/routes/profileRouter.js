@@ -5,7 +5,7 @@ const User = require("../models/user.js");
 const profileRouter = express.Router();
 const validator = require("validator");
 const bcrypt = require("bcrypt");
-const { uploadUtils } = require("../utils/cloudinary");
+const { uploadUtils } = require("../utils/s3");
 
 profileRouter.get("/profile", auth, async (req, res) => {
   const user = req.user;
@@ -49,7 +49,7 @@ profileRouter.patch(
 
       const updateData = { ...req.body };
       if (req.file) {
-        updateData.photoURL = req.file.path;
+        updateData.photoURL = req.file.location;
       }
 
       const updatedUser = await User.findByIdAndUpdate(

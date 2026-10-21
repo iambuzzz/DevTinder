@@ -4,7 +4,7 @@
 
 **DevTinder** is a robust, full-stack social networking application designed specifically for developers to connect, collaborate, and network. Think of it as "Tinder for Developers." Users can swipe through profiles, send connection requests, chat in real-time, and upgrade to premium memberships.
 
-This project goes beyond basic CRUD operations, implementing advanced backend engineering concepts like **Job Queues (Bull)**, **Scheduled Tasks (Cron)**, **AWS Email Integration (SES)**, **Payment Gateways (Razorpay)**, and **Cloud Storage (Cloudinary)**.
+This project goes beyond basic CRUD operations, implementing advanced backend engineering concepts like **Job Queues (Bull)**, **Scheduled Tasks (Cron)**, **AWS Email Integration (SES)**, **Payment Gateways (Razorpay)**, and **Cloud Storage (AWS S3)**.
 
 **🔗 Live Demo:** [https://iambuzzdev.in/](https://iambuzzdev.in/)
 
@@ -43,7 +43,7 @@ The backend is highly scalable, utilizing the following libraries:
 - **Database:** `mongoose` (MongoDB Object Modeling).
 - **Authentication & Security:** `jsonwebtoken` (JWT), `bcrypt` (Hashing), `validator` (Input sanitization).
 - **Real-Time Engine:** `socket.io` (WebSockets for Chat & Status).
-- **File Storage:** `cloudinary`, `multer`, `multer-storage-cloudinary` (Profile photo uploads).
+- **File Storage:** `@aws-sdk/client-s3`, `multer`, `multer-s3` (Profile photo uploads to AWS S3).
 - **Payments:** `razorpay` (Payment gateway integration).
 - **Email Service:** `@aws-sdk/client-ses` (Amazon Simple Email Service).
 - **Task Queues:** `bull` (Redis-based queue for background job processing).
@@ -63,7 +63,7 @@ The backend is highly scalable, utilizing the following libraries:
 
 ### 1. Advanced Authentication & Profile
 - **Secure Auth:** JWT-based authentication with HTTP-Only Cookies.
-- **Profile Management:** Edit bio, skills, age, gender, and upload profile pictures directly to **Cloudinary**.
+- **Profile Management:** Edit bio, skills, age, gender, and upload profile pictures directly to **AWS S3**.
 - **Input Validation:** Strict server-side validation using `validator.js`.
 
 ### 2. Connection Logic (The Feed)
