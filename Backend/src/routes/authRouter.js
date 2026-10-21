@@ -4,7 +4,6 @@ const { validateSignupData, validateLoginData } = require("../utils/validate");
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
-const { sendEmail } = require("../utils/sendEmail");
 
 authRouter.post("/signup", async (req, res) => {
   try {

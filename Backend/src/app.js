@@ -10,7 +10,6 @@ require("dotenv").config();
 const cors = require("cors");
 const path = require("path");
 const http = require("http");
-// require("./utils/cronjob");
 // NODE_ENV ke basis par file path decide karo
 const envFile =
   process.env.NODE_ENV === "production" ? ".env.production" : ".env";
